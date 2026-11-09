@@ -405,7 +405,7 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                 value={membrete}
                 onChange={e => setMembrete(e.target.value)}
                 rows={4}
-                placeholder="REPÚBLICA BOLIVARIANA DE VENEZUELA&#10;MINISTERIO DEL PODER POPULAR PARA LA EDUCACIÓN UNIVERSITARIA&#10;UNIVERSIDAD...&#10;FACULTAD...&#10;ESCUELA..."
+                placeholder="MEMBRETE DE LA UNIVERSIDAD..."
                 className="w-full text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl p-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 leading-relaxed font-serif"
               />
               <p className="text-[10px] text-slate-400 mt-0.5">
@@ -557,7 +557,7 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                   type="text"
                   value={city}
                   onChange={e => setCity(e.target.value)}
-                  placeholder="Ej: Caracas"
+                  placeholder="Ej: Ciudad"
                   className="w-full text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md p-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>

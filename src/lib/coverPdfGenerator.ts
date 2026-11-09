@@ -22,16 +22,14 @@ export interface CoverData {
   docenteName: string;
   authorRole: string;        // e.g. "REALIZADO POR:" | "AUTOR:"
   authors: StudentAuthor[];
-  city?: string;             // e.g. "Caracas"
+  city?: string;             // e.g. "Ciudad"
   month: string;             // e.g. "Noviembre"
   year: string;              // e.g. "2026"
 }
 
-export const DEFAULT_MEMBRETE = `REPÚBLICA BOLIVARIANA DE VENEZUELA
-MINISTERIO DEL PODER POPULAR PARA LA EDUCACIÓN UNIVERSITARIA
-UNIVERSIDAD NACIONAL EXPERIMENTAL DE LOS LLANOS OCCIDENTALES
-VICERRECTORADO DE PLANIFICACIÓN Y DESARROLLO REGIONAL
-PROGRAMA CIENCIAS BÁSICAS Y APLICADAS`;
+export const DEFAULT_MEMBRETE = `NOMBRE DE LA INSTITUCIÓN O UNIVERSIDAD
+FACULTAD O DEPARTAMENTO ACADÉMICO
+CARRERA O PROGRAMA DE ESTUDIOS`;
 
 export const DOCENTE_TITLE_OPTIONS = [
   'Ing.',
