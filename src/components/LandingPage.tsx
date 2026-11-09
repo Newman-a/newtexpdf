@@ -109,13 +109,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <a
+              href="https://github.com/Newman-a/newtexpdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-9 px-3 text-xs text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-800 rounded-lg flex items-center gap-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-zinc-800/80 shadow-xs"
+              title="Ver repositorio y documentación en GitHub"
+            >
+              <Github className="w-4 h-4 text-slate-800 dark:text-zinc-100" />
+              <span className="font-medium">Doc</span>
+            </a>
+
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={onToggleDarkMode}
-              className="h-9 w-9 p-0 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+              className="h-9 w-9 p-0 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white rounded-lg"
               title={darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
             >
               {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}

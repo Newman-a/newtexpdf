@@ -12,6 +12,7 @@ import {
   Code2,
   Eye,
   GraduationCap,
+  Github,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { PaperType, GlobalFont } from '@/lib/latexParser';
@@ -233,6 +234,18 @@ export const Header: React.FC<HeaderProps> = ({
               <Moon className="w-4 h-4" />
             )}
           </Button>
+
+          {/* GitHub / Doc link (Desktop) */}
+          <a
+            href="https://github.com/Newman-a/newtexpdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="h-8 px-2 text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-md hidden md:flex items-center gap-1.5 transition-colors"
+            title="Ver documentación y repositorio en GitHub"
+          >
+            <Github className="w-3.5 h-3.5" />
+            <span className="text-[11px] font-medium">Doc</span>
+          </a>
 
           {/* Main Action: Compile with Tectonic */}
           <Button

@@ -17,6 +17,8 @@ import {
   Layers,
   Sliders,
   GraduationCap,
+  Github,
+  ExternalLink,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import {
@@ -356,6 +358,19 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
           <DropdownMenuItem onClick={onGoToHome}>
             <Home className="w-3.5 h-3.5 mr-2 text-slate-400" />
             <span>Inicio / Prompt IA</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem asChild>
+            <a
+              href="https://github.com/Newman-a/newtexpdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center w-full cursor-pointer"
+            >
+              <Github className="w-3.5 h-3.5 mr-2 text-slate-700 dark:text-zinc-300" />
+              <span>Documentación (GitHub)</span>
+              <ExternalLink className="w-3 h-3 ml-auto text-slate-400" />
+            </a>
           </DropdownMenuItem>
         </DropdownMenuGroup>
 
