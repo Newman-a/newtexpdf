@@ -189,9 +189,21 @@ function parseInlineFormatting(text: string): string {
   });
 
   // Hyperlinks: \href{url}{text}
-  result = result.replace(/\\href\{([^}]+)\}\{([^}]+)\}/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">$2</a>');
+  result = result.replace(/\\href\{([^}]+)\}\{([^}]+)\}/g, (_, rawUrl, rawText) => {
+    const cleanUrl = rawUrl.replace(/\\([_%$&])/g, '$1').replace(/\$=?\d+\$?|\$=[^$\s]+|\$/g, '').trim();
+    const cleanText = rawText.replace(/\$=?\d+\$?|\$=[^$\s]+|\$/g, '').trim();
+    return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="latex-url text-blue-600 underline">${cleanText}</a>`;
+  });
   // \url{url}
-  result = result.replace(/\\url\{([^}]+)\}/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline font-mono text-xs">$1</a>');
+  result = result.replace(/\\url\{([^}]+)\}/g, (_, rawUrl) => {
+    const cleanUrl = rawUrl.replace(/\\([_%$&])/g, '$1').replace(/\$=?\d+\$?|\$=[^$\s]+|\$/g, '').trim();
+    return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="latex-url text-blue-600 underline font-mono text-xs break-all">${cleanUrl}</a>`;
+  });
+
+  // Clean bibliography & indentation directives from inline text
+  result = result.replace(/\\(apaitem|bibitem)\b/g, '');
+  result = result.replace(/\\hangindent(=|\s)[^\s\\<]+/g, '');
+  result = result.replace(/\\hangafter(=|\s)[^\s\\<]+/g, '');
 
   // Colors: \textcolor{color}{text}
   result = result.replace(/\\textcolor\{([a-zA-Z0-9#]+)\}\{([^{}]+)\}/g, '<span style="color: $1;">$2</span>');
@@ -349,6 +361,10 @@ export function parseLatexToHtml(latexCode: string): ParseResult {
   text = text.replace(/^\s*\\(?:noindent|indent|centering|raggedright|raggedleft)\s*$/gm, '');
   text = text.replace(/^\s*\\label\{[^}]*\}\s*$/gm, '');
 
+  // Pre-clean broken dollar fragments like $=10393$, $=4169414$, \$, etc.
+  text = text.replace(/\\?\$=[0-9a-zA-Z_]+\\?\$?/g, '');
+  text = text.replace(/\$=[0-9]+\$?/g, '');
+
   // 4. Tokenizar y proteger bloques matemáticos y entornos complejos antes de procesar texto
   const mathPlaceholders: { id: string; html: string }[] = [];
   let placeholderCounter = 0;
@@ -470,8 +486,8 @@ export function parseLatexToHtml(latexCode: string): ParseResult {
     return addPlaceholder('<hr class="my-4 border-t border-slate-300 dark:border-slate-700" />');
   });
 
-  // Bibliography environment
-  text = text.replace(/\\begin\{thebibliography\}(?:\{[^}]*\})?([\s\S]*?)\\end\{thebibliography\}/g, (_, bibContent) => {
+  // Bibliography environments (both standard thebibliography and apabib)
+  text = text.replace(/\\begin\{(?:thebibliography|apabib)\}(?:\{[^}]*\})?([\s\S]*?)\\end\{(?:thebibliography|apabib)\}/g, (_, bibContent) => {
     return addPlaceholder(parseBibliography(bibContent));
   });
 
@@ -542,7 +558,7 @@ function parseParagraphs(text: string): string {
   const blocks = text.split(/\n\s*\n+/);
   return blocks
     .map(block => {
-      const trimmed = block.trim();
+      let trimmed = block.trim();
       if (!trimmed) return '';
       // If it's already an HTML block or placeholder, don't wrap in <p>
       if (trimmed.startsWith('<h') || trimmed.startsWith('<div') || trimmed.startsWith('<ul') ||
@@ -550,6 +566,17 @@ function parseParagraphs(text: string): string {
           trimmed.startsWith('___LATEX_BLOCK_')) {
         return trimmed;
       }
+
+      // Check for hanging indent commands (\hangindent / \hangafter)
+      const isHanging = /\\hangindent\b/.test(trimmed) || /\\hangafter\b/.test(trimmed);
+      if (isHanging) {
+        trimmed = trimmed
+          .replace(/\\hangindent(=|\s)[^\s\\]+/g, '')
+          .replace(/\\hangafter(=|\s)[^\s\\]+/g, '')
+          .trim();
+        return `<p class="latex-bib-item latex-hanging-indent my-2 leading-relaxed" style="text-align: left; padding-left: 2rem; text-indent: -2rem;">${parseInlineFormatting(trimmed)}</p>`;
+      }
+
       return `<p class="my-2 leading-relaxed text-justify">${parseInlineFormatting(trimmed)}</p>`;
     })
     .filter(Boolean)
@@ -777,19 +804,63 @@ function renderImage(src: string, options?: string): string {
 }
 
 /**
- * Parses bibliography items.
+ * Parses bibliography items from either \begin{thebibliography} or \begin{apabib},
+ * supporting \bibitem, \apaitem, \hangindent, or standard paragraph entries.
  */
 function parseBibliography(content: string): string {
-  const items = content.split(/\\bibitem\{([^}]+)\}/);
-  let bibHtml = '<div class="latex-bibliography mt-8 border-t pt-4 text-xs"><h3 class="font-bold mb-3 text-sm">Referencias</h3><ol class="space-y-1.5 pl-4 list-decimal">';
+  // Pre-clean dollar artifacts & broken fragments
+  let cleanContent = content
+    .replace(/\\?\$=[0-9a-zA-Z_]+\\?\$?/g, '')
+    .replace(/\$=[0-9]+\$?/g, '');
 
-  for (let i = 1; i < items.length; i += 2) {
-    const key = items[i];
-    const text = items[i + 1]?.trim() || '';
-    bibHtml += `<li id="cite-${key}" class="leading-relaxed"><span class="font-semibold text-slate-600">[${key}]</span> ${parseInlineFormatting(text)}</li>`;
+  let items: { key?: string; text: string }[] = [];
+
+  if (cleanContent.includes('\\bibitem') || cleanContent.includes('\\apaitem')) {
+    // Split by \bibitem[...] or \bibitem{...} or \apaitem
+    const rawTokens = cleanContent.split(/\\(?:bibitem(?:\[[^\]]*\])?\{([^}]*)\}|apaitem\b)/g);
+    let currentKey = '';
+    for (let i = 0; i < rawTokens.length; i++) {
+      const token = rawTokens[i];
+      if (token === undefined) continue;
+      if (i % 2 === 1) {
+        currentKey = token || '';
+      } else {
+        const trimmed = token.trim();
+        if (trimmed) {
+          items.push({ key: currentKey, text: trimmed });
+          currentKey = '';
+        }
+      }
+    }
+  } else {
+    // Plain text or standard paragraphs separated by newlines or \par
+    const rawParas = cleanContent.split(/\n\s*\n+|\\par\b/);
+    rawParas.forEach(p => {
+      const trimmed = p.trim();
+      if (trimmed) {
+        items.push({ text: trimmed });
+      }
+    });
   }
 
-  bibHtml += '</ol></div>';
+  let bibHtml = '<div class="latex-bibliography mt-8 border-t pt-4 text-xs text-left" style="text-align: left;">\n' +
+    '  <h3 class="latex-bibliography-title font-bold mb-3 text-sm">Referencias</h3>\n' +
+    '  <div class="latex-bibliography-list space-y-3">\n';
+
+  items.forEach(item => {
+    let itemText = item.text
+      .replace(/\\hangindent(=|\s)[^\s\\]+/g, '')
+      .replace(/\\hangafter(=|\s)[^\s\\]+/g, '')
+      .replace(/\\raggedright\b/g, '')
+      .trim();
+
+    if (!itemText) return;
+
+    const keyBadge = item.key ? `<span class="font-semibold text-slate-600 mr-1">[${item.key}]</span> ` : '';
+    bibHtml += `    <p class="latex-bib-item leading-relaxed" style="text-align: left; padding-left: 2rem; text-indent: -2rem;">${keyBadge}${parseInlineFormatting(itemText)}</p>\n`;
+  });
+
+  bibHtml += '  </div>\n</div>';
   return bibHtml;
 }
 

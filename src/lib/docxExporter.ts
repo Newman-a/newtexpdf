@@ -3,6 +3,7 @@ import {
   Packer,
   Paragraph,
   TextRun,
+  ExternalHyperlink,
   Table,
   TableRow,
   TableCell,
@@ -150,15 +151,15 @@ function splitLatexFormattingRuns(
 }
 
 /**
- * Extracts text and formatting runs from an HTML element
+ * Extracts text, formatting runs and hyperlinks from an HTML element
  */
 function parseInlineRuns(
   node: Node,
   fontFamily: string,
   baseSize: number,
   inherited: { bold?: boolean; italics?: boolean; underline?: boolean; font?: string } = {}
-): TextRun[] {
-  const runs: TextRun[] = [];
+): (TextRun | ExternalHyperlink)[] {
+  const runs: (TextRun | ExternalHyperlink)[] = [];
 
   const traverse = (
     current: Node,
@@ -168,10 +169,15 @@ function parseInlineRuns(
       let text = current.textContent || '';
       if (!text) return;
 
-      // Clean stray formatting or spacing commands
+      // Clean stray formatting, bibliography or spacing commands
       text = text.replace(/\\(onehalfspacing|doublespacing|singlespacing|begingroup|endgroup|bgroup|egroup|noindent|indent|centering|raggedright|raggedleft|bigskip|medskip|smallskip|sloppy|fussy|relax|appendix|protect)\b/g, '');
       text = text.replace(/\\(label|pagenumbering|pagestyle|thispagestyle|setstretch|linespread|phantom|hphantom|vphantom)\{[^}]*\}/g, '');
       text = text.replace(/\\(setcounter|addtocounter)\{[^}]*\}\{[^}]*\}/g, '');
+      text = text.replace(/\\(apaitem|bibitem|bibentry)\b/g, '');
+      text = text.replace(/\\hangindent(=|\s)[^\s\\]+/g, '');
+      text = text.replace(/\\hangafter(=|\s)[^\s\\]+/g, '');
+      // Clean truncated dollar artifacts like $=10393, $=4169414
+      text = text.replace(/\$=?\d+\$?|\$=[0-9a-zA-Z_]+/g, '');
       if (!text.trim()) return;
 
       // Clean any accidental leftover LaTeX commands like \textbf, \textit, etc.
@@ -201,6 +207,42 @@ function parseInlineRuns(
     if (current.nodeType === Node.ELEMENT_NODE) {
       const el = current as HTMLElement;
       const tag = el.tagName.toUpperCase();
+
+      // Native ExternalHyperlink for <a> tags
+      if (tag === 'A') {
+        let href = el.getAttribute('href') || '';
+        href = href.replace(/\$=?\d+\$?|\$=[^$\s]+|\$/g, '').trim();
+        let linkText = el.textContent || href;
+        linkText = linkText.replace(/\$=?\d+\$?|\$=[^$\s]+|\$/g, '').trim();
+
+        if (href && (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:'))) {
+          runs.push(
+            new ExternalHyperlink({
+              children: [
+                new TextRun({
+                  text: linkText || href,
+                  font: fontFamily,
+                  size: baseSize,
+                  color: '0563C1',
+                  underline: {},
+                }),
+              ],
+              link: href,
+            })
+          );
+          return;
+        } else if (linkText) {
+          runs.push(
+            new TextRun({
+              text: linkText,
+              font: fontFamily,
+              size: baseSize,
+              color: state.color,
+            })
+          );
+          return;
+        }
+      }
 
       // Line breaks <br>
       if (tag === 'BR') {
@@ -241,15 +283,18 @@ function parseInlineRuns(
   node.childNodes.forEach(child => traverse(child, inherited));
 
   if (runs.length === 0 && node.textContent?.trim()) {
-    runs.push(
-      new TextRun({
-        text: node.textContent.trim(),
-        font: fontFamily,
-        size: baseSize,
-        bold: inherited.bold,
-        italics: inherited.italics,
-      })
-    );
+    const cleanText = node.textContent.trim().replace(/\$=?\d+\$?|\$=[0-9a-zA-Z_]+/g, '');
+    if (cleanText) {
+      runs.push(
+        new TextRun({
+          text: cleanText,
+          font: fontFamily,
+          size: baseSize,
+          bold: inherited.bold,
+          italics: inherited.italics,
+        })
+      );
+    }
   }
 
   return runs;
@@ -320,6 +365,10 @@ export async function generateDocxBlob(
   sanitizedHtml = sanitizedHtml.replace(/\\(onehalfspacing|doublespacing|singlespacing|begingroup|endgroup|bgroup|egroup|noindent|indent|centering|raggedright|raggedleft|bigskip|medskip|smallskip|sloppy|fussy|relax|appendix|protect)\b/g, '');
   sanitizedHtml = sanitizedHtml.replace(/\\(label|pagenumbering|pagestyle|thispagestyle|setstretch|linespread|phantom|hphantom|vphantom)\{[^}]*\}/g, '');
   sanitizedHtml = sanitizedHtml.replace(/\\(setcounter|addtocounter)\{[^}]*\}\{[^}]*\}/g, '');
+  sanitizedHtml = sanitizedHtml.replace(/\\(apaitem|bibitem|bibentry)\b/g, '');
+  sanitizedHtml = sanitizedHtml.replace(/\\hangindent(=|\s)[^\s\\<]+/g, '');
+  sanitizedHtml = sanitizedHtml.replace(/\\hangafter(=|\s)[^\s\\<]+/g, '');
+  sanitizedHtml = sanitizedHtml.replace(/\$=?\d+\$?|\$=[0-9a-zA-Z_]+/g, '');
   sanitizedHtml = sanitizedHtml.replace(/\\textbf\s*(<[^>]+>)/g, '$1');
   sanitizedHtml = sanitizedHtml.replace(/(<[^>]+>)\s*\\textbf/g, '$1');
   sanitizedHtml = sanitizedHtml.replace(/\\textbf([A-ZÁÉÍÓÚÑa-z0-9_]+)/g, '<strong>$1</strong>');
@@ -332,6 +381,7 @@ export async function generateDocxBlob(
   const doc = parser.parseFromString(sanitizedHtml, 'text/html');
 
   const children: (Paragraph | Table)[] = [];
+  let inBibliographySection = false;
 
   const processBlock = (el: HTMLElement) => {
     const tag = el.tagName.toUpperCase();
@@ -367,6 +417,15 @@ export async function generateDocxBlob(
     }
 
     // Headings
+    if (tag === 'H1' || tag === 'H2' || tag === 'H3') {
+      const headingText = (el.textContent || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (headingText.includes('referencia') || headingText.includes('bibliograf') || headingText.includes('references')) {
+        inBibliographySection = true;
+      } else {
+        inBibliographySection = false;
+      }
+    }
+
     if (tag === 'H1') {
       const runs = parseInlineRuns(el, fontFamily, 32, { bold: true });
       children.push(
@@ -468,14 +527,24 @@ export async function generateDocxBlob(
       return;
     }
 
-    // Standard Paragraph or leaf DIV (like centered blocks)
+    // Standard Paragraph or leaf DIV (like centered blocks or bibliography items)
+    const isBibItem =
+      el.classList.contains('latex-bib-item') ||
+      el.classList.contains('latex-hanging-indent') ||
+      (el.closest && el.closest('.latex-bibliography') !== null) ||
+      (el.parentElement && el.parentElement.classList.contains('latex-bibliography')) ||
+      inBibliographySection;
+
     const runs = parseInlineRuns(el, fontFamily, baseSize);
     if (runs.length > 0) {
       children.push(
         new Paragraph({
           children: runs,
-          alignment,
-          spacing: { before: 80, after: 120, line: 360 }, // 1.5 line spacing
+          alignment: isBibItem ? AlignmentType.LEFT : alignment,
+          indent: isBibItem
+            ? { left: 720, hanging: 720 }
+            : undefined,
+          spacing: { before: isBibItem ? 80 : 80, after: 120, line: 360 }, // 1.5 line spacing
         })
       );
     }

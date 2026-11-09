@@ -62,8 +62,14 @@ Sigue estrictamente estos lineamientos y criterios técnicos:
 
 5. PAQUETES ESTÁNDAR Y LIMPIEZA:
 - Emplea únicamente paquetes universales compatibles con Tectonic/XeTeX:
-  amsmath, amssymb, graphicx, booktabs, array, geometry, mathptmx, hyperref.
+  amsmath, amssymb, graphicx, booktabs, array, geometry, mathptmx, hyperref, url.
 - Evita paquetes obsoletos o comandos conflictivos.
+
+6. BIBLIOGRAFÍA Y REFERENCIAS (FORMATO APA LIMPIO Y COMPATIBLE CON WORD):
+- Elimina cualquier comando o entorno bibliográfico complejo (NO uses \\apaitem ni \\begin{apabib}). Escribe las referencias como texto plano estructurado dentro de un entorno estándar (p. ej., párrafos normales con sangría francesa usando \\hangindent=0.5in \\hangafter=1 o simplemente saltos de párrafo \\par).
+- Prohíbe terminantemente el uso de signos de dólar ($) en los enlaces o en el texto. Elimina fragmentos truncados como "$=10393$" o "$=4169414$". Si una fuente no tiene URL limpia, omite el enlace y deja la referencia bibliográfica editorial completa.
+- Escribe todas las URLs dentro del comando \\url{...} (requiere \\usepackage{url} o \\usepackage{hyperref}) con la opción de permitir saltos de línea automáticos, o coloca el hipervínculo en texto limpio sin caracteres escapados que rompan la justificación en Word.
+- Evita espacios en blanco desproporcionados entre palabras forzando alineación a la izquierda (\\raggedright) en el bloque de bibliografía para que Word no estire el texto al justificar líneas con enlaces largos.
 
 A continuación, aquí tienes los enunciados y datos de la actividad para resolver:
 [PEGA AQUÍ EL ENUNCIADO O EJERCICIOS DE TU ACTIVIDAD]`;
