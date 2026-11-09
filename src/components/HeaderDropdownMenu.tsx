@@ -12,6 +12,7 @@ import {
   Trash2,
   Home,
   Check,
+  ChevronDown,
   Type,
   Layers,
   Sliders,
@@ -27,11 +28,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { PaperType, GlobalFont } from '@/lib/latexParser';
@@ -79,6 +76,14 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
   onCopyAll,
   onDownloadTex,
 }) => {
+  const [expandedSection, setExpandedSection] = React.useState<'paper' | 'font' | 'size' | null>(null);
+
+  const toggleSection = (section: 'paper' | 'font' | 'size', e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpandedSection(prev => (prev === section ? null : section));
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -94,89 +99,193 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="w-64 max-h-[85vh] overflow-y-auto" align="end" sideOffset={6}>
+      <DropdownMenuContent className="w-72 max-w-[calc(100vw-1.5rem)] max-h-[85vh] overflow-y-auto" align="end" sideOffset={6}>
         {/* Document Formatting Group */}
         <DropdownMenuGroup>
           <DropdownMenuLabel>Documento y Formato</DropdownMenuLabel>
 
-          {/* Submenu: Paper Type */}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <Layers className="w-3.5 h-3.5 mr-2 text-emerald-600 dark:text-emerald-400" />
+          {/* Collapsible: Formato de Hoja */}
+          <div className="flex flex-col">
+            <button
+              type="button"
+              onClick={(e) => toggleSection('paper', e)}
+              className={`flex items-center w-full px-2 py-1.5 text-xs rounded-md transition-colors ${
+                expandedSection === 'paper'
+                  ? 'bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-medium'
+                  : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5 mr-2 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>Formato de Hoja</span>
-              <span className="ml-auto text-[10px] text-slate-400 capitalize mr-1">{paperType}</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuSubContent className="w-44">
-                <DropdownMenuItem onClick={() => onPaperTypeChange('letter')} className="flex items-center justify-between">
+              <span className="ml-auto text-[10px] text-slate-400 dark:text-zinc-400 capitalize mr-1.5">
+                {paperType === 'letter' ? 'Carta' : paperType === 'legal' ? 'Oficio' : 'A4'}
+              </span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                  expandedSection === 'paper' ? 'rotate-180 text-emerald-600 dark:text-emerald-400' : ''
+                }`}
+              />
+            </button>
+            {expandedSection === 'paper' && (
+              <div className="mx-1 my-1 p-1 rounded-lg bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/70 dark:border-zinc-800 space-y-0.5 animate-in fade-in-50 duration-150">
+                <button
+                  type="button"
+                  onClick={() => onPaperTypeChange('letter')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                    paperType === 'letter'
+                      ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-semibold shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700/50'
+                  }`}
+                >
                   <span>Carta (Letter)</span>
-                  {paperType === 'letter' && <Check className="w-3.5 h-3.5 text-emerald-600" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onPaperTypeChange('a4')} className="flex items-center justify-between">
-                  <span>A4 (210×297)</span>
-                  {paperType === 'a4' && <Check className="w-3.5 h-3.5 text-emerald-600" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onPaperTypeChange('legal')} className="flex items-center justify-between">
+                  {paperType === 'letter' && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onPaperTypeChange('a4')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                    paperType === 'a4'
+                      ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-semibold shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700/50'
+                  }`}
+                >
+                  <span>A4 (210×297 mm)</span>
+                  {paperType === 'a4' && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onPaperTypeChange('legal')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                    paperType === 'legal'
+                      ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-semibold shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700/50'
+                  }`}
+                >
                   <span>Oficio (Legal)</span>
-                  {paperType === 'legal' && <Check className="w-3.5 h-3.5 text-emerald-600" />}
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuPortal>
-          </DropdownMenuSub>
+                  {paperType === 'legal' && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+                </button>
+              </div>
+            )}
+          </div>
 
-          {/* Submenu: Global Font */}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <Type className="w-3.5 h-3.5 mr-2 text-blue-600 dark:text-blue-400" />
+          {/* Collapsible: Tipografía */}
+          <div className="flex flex-col">
+            <button
+              type="button"
+              onClick={(e) => toggleSection('font', e)}
+              className={`flex items-center w-full px-2 py-1.5 text-xs rounded-md transition-colors ${
+                expandedSection === 'font'
+                  ? 'bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-medium'
+                  : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800'
+              }`}
+            >
+              <Type className="w-3.5 h-3.5 mr-2 text-blue-600 dark:text-blue-400 shrink-0" />
               <span>Tipografía</span>
-              <span className="ml-auto text-[10px] text-slate-400 capitalize mr-1">{globalFont}</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuSubContent className="w-48">
-                <DropdownMenuItem onClick={() => onGlobalFontChange('times')} className="flex items-center justify-between">
+              <span className="ml-auto text-[10px] text-slate-400 dark:text-zinc-400 capitalize mr-1.5">
+                {globalFont === 'times' ? 'Times' : globalFont === 'arial' ? 'Arial' : globalFont === 'modern' ? 'Modern' : 'Palatino'}
+              </span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                  expandedSection === 'font' ? 'rotate-180 text-blue-600 dark:text-blue-400' : ''
+                }`}
+              />
+            </button>
+            {expandedSection === 'font' && (
+              <div className="mx-1 my-1 p-1 rounded-lg bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/70 dark:border-zinc-800 space-y-0.5 animate-in fade-in-50 duration-150">
+                <button
+                  type="button"
+                  onClick={() => onGlobalFontChange('times')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                    globalFont === 'times'
+                      ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-semibold shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700/50'
+                  }`}
+                >
                   <span className="font-serif">Times New Roman</span>
-                  {globalFont === 'times' && <Check className="w-3.5 h-3.5 text-emerald-600" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onGlobalFontChange('arial')} className="flex items-center justify-between">
+                  {globalFont === 'times' && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onGlobalFontChange('arial')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                    globalFont === 'arial'
+                      ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-semibold shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700/50'
+                  }`}
+                >
                   <span className="font-sans">Arial (Sans)</span>
-                  {globalFont === 'arial' && <Check className="w-3.5 h-3.5 text-emerald-600" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onGlobalFontChange('modern')} className="flex items-center justify-between">
+                  {globalFont === 'arial' && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onGlobalFontChange('modern')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                    globalFont === 'modern'
+                      ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-semibold shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700/50'
+                  }`}
+                >
                   <span className="font-serif">Latin Modern</span>
-                  {globalFont === 'modern' && <Check className="w-3.5 h-3.5 text-emerald-600" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onGlobalFontChange('palatino')} className="flex items-center justify-between">
+                  {globalFont === 'modern' && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onGlobalFontChange('palatino')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                    globalFont === 'palatino'
+                      ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-semibold shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700/50'
+                  }`}
+                >
                   <span className="font-serif">Palatino</span>
-                  {globalFont === 'palatino' && <Check className="w-3.5 h-3.5 text-emerald-600" />}
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuPortal>
-          </DropdownMenuSub>
+                  {globalFont === 'palatino' && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+                </button>
+              </div>
+            )}
+          </div>
 
-          {/* Submenu: Font Size */}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <Sliders className="w-3.5 h-3.5 mr-2 text-purple-600 dark:text-purple-400" />
+          {/* Collapsible: Tamaño de Letra */}
+          <div className="flex flex-col">
+            <button
+              type="button"
+              onClick={(e) => toggleSection('size', e)}
+              className={`flex items-center w-full px-2 py-1.5 text-xs rounded-md transition-colors ${
+                expandedSection === 'size'
+                  ? 'bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-medium'
+                  : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5 mr-2 text-purple-600 dark:text-purple-400 shrink-0" />
               <span>Tamaño de Letra</span>
-              <span className="ml-auto text-[10px] text-slate-400 mr-1">{fontSize}</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuSubContent className="w-36">
-                <DropdownMenuItem onClick={() => onFontSizeChange('10pt')} className="flex items-center justify-between">
-                  <span>10 pt</span>
-                  {fontSize === '10pt' && <Check className="w-3.5 h-3.5 text-emerald-600" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onFontSizeChange('11pt')} className="flex items-center justify-between">
-                  <span>11 pt</span>
-                  {fontSize === '11pt' && <Check className="w-3.5 h-3.5 text-emerald-600" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onFontSizeChange('12pt')} className="flex items-center justify-between">
-                  <span>12 pt</span>
-                  {fontSize === '12pt' && <Check className="w-3.5 h-3.5 text-emerald-600" />}
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuPortal>
-          </DropdownMenuSub>
+              <span className="ml-auto text-[10px] text-slate-400 dark:text-zinc-400 mr-1.5 font-normal">
+                {fontSize}
+              </span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                  expandedSection === 'size' ? 'rotate-180 text-purple-600 dark:text-purple-400' : ''
+                }`}
+              />
+            </button>
+            {expandedSection === 'size' && (
+              <div className="mx-1 my-1 p-1 rounded-lg bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/70 dark:border-zinc-800 space-y-0.5 animate-in fade-in-50 duration-150">
+                {(['10pt', '11pt', '12pt'] as const).map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => onFontSizeChange(size)}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                      fontSize === size
+                        ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-semibold shadow-xs'
+                        : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700/50'
+                    }`}
+                  >
+                    <span>{size}</span>
+                    {fontSize === size && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
