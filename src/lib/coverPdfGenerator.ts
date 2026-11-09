@@ -118,9 +118,10 @@ export function createCoverPdfDocument(data: CoverData): jsPDF {
 
   const marginX = 25;
   const marginY = 24;
+  const headerMarginX = 20;
 
   // 1. Logos (Left and Right) with strict original aspect ratio preservation
-  const logoBoxSize = 25; // max bounding box in mm (width and height)
+  const logoBoxSize = 22; // optimal bounding box in mm for academic header logos
 
   const addProportionalLogo = (imageData: string, boxX: number, boxY: number) => {
     try {
@@ -162,30 +163,50 @@ export function createCoverPdfDocument(data: CoverData): jsPDF {
   };
 
   if (data.logoLeft) {
-    addProportionalLogo(data.logoLeft, marginX, marginY);
+    addProportionalLogo(data.logoLeft, headerMarginX, marginY);
   }
 
   if (data.logoRight) {
-    addProportionalLogo(data.logoRight, W - marginX - logoBoxSize, marginY);
+    addProportionalLogo(data.logoRight, W - headerMarginX - logoBoxSize, marginY);
   }
 
   // 2. Centered Membrete
   doc.setFont(font, 'bold');
-  doc.setFontSize(membreteSize);
-  doc.setTextColor(20, 20, 20);
 
-  // Calculate available text width between logos or margins
+  // Calculate available text width between logos (or page margins if no logos)
   const hasLogos = !!(data.logoLeft || data.logoRight);
-  const maxMembreteWidth = hasLogos ? W - (marginX * 2 + logoBoxSize * 2 + 10) : W - marginX * 2;
+  // Ensure comfortable horizontal span so official institutional lines do not awkwardly wrap
+  const maxMembreteWidth = hasLogos
+    ? W - (headerMarginX * 2 + logoBoxSize * 2 + 8) // ~126mm on Letter, ~120mm on A4
+    : W - marginX * 2; // ~166mm when no logos
 
   const rawMembreteLines = data.membrete.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // Auto-fit font size: ensure no single line gets broken awkwardly into a dangling word (e.g. "DEFENSA")
+  let effectiveMembreteSize = membreteSize;
+  for (const line of rawMembreteLines) {
+    doc.setFontSize(effectiveMembreteSize);
+    const textWidth = doc.getTextWidth(line);
+    if (textWidth > maxMembreteWidth && textWidth > 0) {
+      const scaleNeeded = (maxMembreteWidth / textWidth) * 0.99;
+      const targetSize = effectiveMembreteSize * scaleNeeded;
+      if (targetSize < effectiveMembreteSize) {
+        effectiveMembreteSize = Math.max(targetSize, 8.5);
+      }
+    }
+  }
+
+  doc.setFontSize(effectiveMembreteSize);
+  doc.setTextColor(20, 20, 20);
+
+  const currentMembreteLineHeight = effectiveMembreteSize * 0.44;
   let currentY = marginY + 2;
 
   rawMembreteLines.forEach(line => {
     const wrapped = doc.splitTextToSize(line, maxMembreteWidth);
     wrapped.forEach((wrappedLine: string) => {
       doc.text(wrappedLine, W / 2, currentY, { align: 'center' });
-      currentY += membreteLineHeight;
+      currentY += currentMembreteLineHeight;
     });
   });
 
