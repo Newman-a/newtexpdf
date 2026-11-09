@@ -11,6 +11,7 @@ import {
   Menu,
   Code2,
   Eye,
+  GraduationCap,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { PaperType, GlobalFont } from '@/lib/latexParser';
@@ -31,6 +32,7 @@ interface HeaderProps {
   onToggleDarkMode: () => void;
   onOpenHelp: () => void;
   onGoToHome: () => void;
+  onOpenCoverModal?: () => void;
   activeMobileTab?: 'editor' | 'preview';
   onToggleMobileTab?: (tab: 'editor' | 'preview') => void;
   onPasteClipboard?: () => void;
@@ -54,6 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleDarkMode,
   onOpenHelp,
   onGoToHome,
+  onOpenCoverModal,
   activeMobileTab = 'editor',
   onToggleMobileTab,
   onPasteClipboard,
@@ -279,6 +282,22 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </Button>
 
+          {/* Action: Generate Academic Cover Page (PDF) */}
+          {onOpenCoverModal && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 px-2 sm:px-2.5 text-xs text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 font-medium flex items-center gap-1.5 rounded-md transition-colors"
+              onClick={onOpenCoverModal}
+              title="Generar portada universitaria en PDF lista para imprimir o anexar"
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden sm:inline">Portada PDF</span>
+              <span className="sm:hidden">Portada</span>
+            </Button>
+          )}
+
           {/* Radix UI Dropdown Menu (Only shown on mobile devices, hidden on desktop) */}
           <div className="md:hidden">
             <HeaderDropdownMenu
@@ -296,6 +315,7 @@ export const Header: React.FC<HeaderProps> = ({
               onToggleDarkMode={onToggleDarkMode}
               onOpenHelp={onOpenHelp}
               onGoToHome={onGoToHome}
+              onOpenCoverModal={onOpenCoverModal}
               onPasteClipboard={onPasteClipboard}
               onClearEditor={onClearEditor}
               onCopyAll={onCopyAll}

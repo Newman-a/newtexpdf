@@ -1,7 +1,6 @@
 import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import wasm from 'vite-plugin-wasm';
-import topLevelAwait from 'vite-plugin-top-level-await';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -119,10 +118,12 @@ function tectonicPlugin(): Plugin {
 // https://vitejs.dev/config/
 export default defineConfig({
   base: './',
+  build: {
+    target: 'es2022',
+  },
   plugins: [
     react(),
     wasm(),
-    topLevelAwait(),
     tectonicPlugin(),
   ],
   resolve: {

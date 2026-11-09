@@ -6,6 +6,7 @@ import { HelpModal } from './components/HelpModal';
 import { LandingPage } from './components/LandingPage';
 import { ConfirmDialog } from './components/ui/ConfirmDialog';
 import { CompileSuccessModal } from './components/CompileSuccessModal';
+import { CoverGeneratorModal } from './components/CoverGeneratorModal';
 import {
   parseLatexToHtml,
   PaperType,
@@ -102,6 +103,7 @@ export function App() {
 
   // UI state
   const [helpOpen, setHelpOpen] = useState<boolean>(false);
+  const [coverModalOpen, setCoverModalOpen] = useState<boolean>(false);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const [confirmClearOpen, setConfirmClearOpen] = useState<boolean>(false);
   const [compileSuccessOpen, setCompileSuccessOpen] = useState<boolean>(false);
@@ -322,8 +324,15 @@ export function App() {
       <>
         <LandingPage
           onGoToEditor={handleGoToEditor}
+          onOpenCoverModal={() => setCoverModalOpen(true)}
           darkMode={darkMode}
           onToggleDarkMode={() => setDarkMode(!darkMode)}
+        />
+        {/* Cover Page Generator Modal */}
+        <CoverGeneratorModal
+          isOpen={coverModalOpen}
+          onClose={() => setCoverModalOpen(false)}
+          initialPaperType={paperType}
         />
         {/* Toast Notification */}
         {toastMessage && (
@@ -359,6 +368,7 @@ export function App() {
         onToggleDarkMode={() => setDarkMode(!darkMode)}
         onOpenHelp={() => setHelpOpen(true)}
         onGoToHome={handleGoToHome}
+        onOpenCoverModal={() => setCoverModalOpen(true)}
         activeMobileTab={mobileTab}
         onToggleMobileTab={setMobileTab}
         onPasteClipboard={handlePasteClipboard}
@@ -421,6 +431,13 @@ export function App() {
 
       {/* Help Syntax Modal */}
       <HelpModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
+
+      {/* Cover Page Generator Modal */}
+      <CoverGeneratorModal
+        isOpen={coverModalOpen}
+        onClose={() => setCoverModalOpen(false)}
+        initialPaperType={paperType}
+      />
 
       {/* Confirmation Dialog for clearing editor */}
       <ConfirmDialog

@@ -8,11 +8,13 @@ import {
   CheckCircle2,
   Github,
   Instagram,
+  GraduationCap,
 } from 'lucide-react';
 import { Button } from './ui/button';
 
 interface LandingPageProps {
   onGoToEditor: () => void;
+  onOpenCoverModal?: () => void;
   darkMode: boolean;
   onToggleDarkMode: () => void;
 }
@@ -75,6 +77,7 @@ A continuación, aquí tienes los enunciados y datos de la actividad para resolv
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onGoToEditor,
+  onOpenCoverModal,
   darkMode,
   onToggleDarkMode,
 }) => {
@@ -141,6 +144,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span>Abrir Editor LaTeX</span>
             <ArrowRight className="w-4 h-4" />
           </Button>
+
+          {onOpenCoverModal && (
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              onClick={onOpenCoverModal}
+              className="text-xs sm:text-sm px-5 h-11 border-emerald-300 dark:border-emerald-700/60 bg-emerald-50/60 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 flex items-center gap-2 rounded-xl font-medium"
+            >
+              <GraduationCap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>Generar Portada PDF</span>
+            </Button>
+          )}
 
           <Button
             type="button"

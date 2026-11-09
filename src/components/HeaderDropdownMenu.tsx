@@ -16,6 +16,7 @@ import {
   Type,
   Layers,
   Sliders,
+  GraduationCap,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import {
@@ -44,6 +45,7 @@ interface HeaderDropdownMenuProps {
   onToggleDarkMode: () => void;
   onOpenHelp: () => void;
   onGoToHome: () => void;
+  onOpenCoverModal?: () => void;
   onPasteClipboard?: () => void;
   onClearEditor?: () => void;
   onCopyAll?: () => void;
@@ -65,6 +67,7 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
   onToggleDarkMode,
   onOpenHelp,
   onGoToHome,
+  onOpenCoverModal,
   onPasteClipboard,
   onClearEditor,
   onCopyAll,
@@ -296,6 +299,13 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
             <FileText className="w-3.5 h-3.5 mr-2 text-blue-500" />
             <span>Exportar Word (.docx)</span>
           </DropdownMenuItem>
+
+          {onOpenCoverModal && (
+            <DropdownMenuItem onClick={onOpenCoverModal}>
+              <GraduationCap className="w-3.5 h-3.5 mr-2 text-emerald-600 dark:text-emerald-400" />
+              <span>Generar Portada (PDF)</span>
+            </DropdownMenuItem>
+          )}
 
           {onDownloadTex && (
             <DropdownMenuItem onClick={onDownloadTex}>
