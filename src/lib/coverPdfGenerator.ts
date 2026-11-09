@@ -11,6 +11,7 @@ export interface StudentAuthor {
 export interface CoverData {
   paperType: CoverPaperType;
   fontFamily: 'times' | 'helvetica';
+  fontSize?: '10pt' | '11pt' | '12pt';
   logoLeft?: string | null;  // base64 data URL
   logoRight?: string | null; // base64 data URL
   membrete: string;
@@ -99,6 +100,17 @@ export function getPaperDimensionsMm(paper: CoverPaperType): { width: number; he
 export function createCoverPdfDocument(data: CoverData): jsPDF {
   const { width: W, height: H } = getPaperDimensionsMm(data.paperType);
   const font = data.fontFamily === 'helvetica' ? 'helvetica' : 'times';
+  const baseSize = data.fontSize || '11pt';
+  const scale = baseSize === '10pt' ? 0.9 : baseSize === '12pt' ? 1.12 : 1.0;
+
+  const membreteSize = 10.5 * scale;
+  const membreteLineHeight = 4.8 * scale;
+  const titleSize = 14 * scale;
+  const titleLineHeight = 6.5 * scale;
+  const subtitleSize = 11 * scale;
+  const detailsSize = 10.5 * scale;
+  const detailsLineHeight = 5.5 * scale;
+  const footerSize = 11 * scale;
 
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -138,7 +150,7 @@ export function createCoverPdfDocument(data: CoverData): jsPDF {
 
   // 2. Centered Membrete
   doc.setFont(font, 'bold');
-  doc.setFontSize(10.5);
+  doc.setFontSize(membreteSize);
   doc.setTextColor(20, 20, 20);
 
   // Calculate available text width between logos or margins
@@ -152,7 +164,7 @@ export function createCoverPdfDocument(data: CoverData): jsPDF {
     const wrapped = doc.splitTextToSize(line, maxMembreteWidth);
     wrapped.forEach((wrappedLine: string) => {
       doc.text(wrappedLine, W / 2, currentY, { align: 'center' });
-      currentY += 4.8;
+      currentY += membreteLineHeight;
     });
   });
 
@@ -164,25 +176,25 @@ export function createCoverPdfDocument(data: CoverData): jsPDF {
   }
 
   doc.setFont(font, 'bold');
-  doc.setFontSize(14);
+  doc.setFontSize(titleSize);
   const maxTitleWidth = W - marginX * 2 - 10;
   const rawTitle = data.title.trim() || 'TÍTULO DE LA ACTIVIDAD';
   const titleLines = doc.splitTextToSize(rawTitle.toUpperCase(), maxTitleWidth);
 
   titleLines.forEach((tLine: string) => {
     doc.text(tLine, W / 2, titleY, { align: 'center' });
-    titleY += 6.5;
+    titleY += titleLineHeight;
   });
 
   // Optional Subtitle / Asignatura
   if (data.subtitle && data.subtitle.trim()) {
     titleY += 3;
     doc.setFont(font, 'normal');
-    doc.setFontSize(11);
+    doc.setFontSize(subtitleSize);
     const subLines = doc.splitTextToSize(data.subtitle.trim(), maxTitleWidth);
     subLines.forEach((sLine: string) => {
       doc.text(sLine, W / 2, titleY, { align: 'center' });
-      titleY += 5.2;
+      titleY += 5.2 * scale;
     });
   }
 
@@ -197,38 +209,38 @@ export function createCoverPdfDocument(data: CoverData): jsPDF {
   // Left Column: Docente
   const docRole = data.docenteRole.trim() || 'DOCENTE:';
   doc.setFont(font, 'bold');
-  doc.setFontSize(10.5);
+  doc.setFontSize(detailsSize);
   doc.text(docRole, marginX, lowerY);
 
   const prefix = data.docenteTitle && data.docenteTitle !== 'Sin título' ? `${data.docenteTitle} ` : '';
   const docenteFullName = `${prefix}${data.docenteName.trim() || 'Nombre del Docente'}`;
 
   doc.setFont(font, 'normal');
-  doc.setFontSize(10.5);
-  doc.text(docenteFullName, marginX, lowerY + 5.5);
+  doc.setFontSize(detailsSize);
+  doc.text(docenteFullName, marginX, lowerY + detailsLineHeight);
 
   // Right Column: Autores / Realizado por
   const authRole = data.authorRole.trim() || 'REALIZADO POR:';
   const rightAlignX = W - marginX;
 
   doc.setFont(font, 'bold');
-  doc.setFontSize(10.5);
+  doc.setFontSize(detailsSize);
   doc.text(authRole, rightAlignX, lowerY, { align: 'right' });
 
   doc.setFont(font, 'normal');
-  doc.setFontSize(10.5);
+  doc.setFontSize(detailsSize);
 
   const authorList = data.authors.length > 0 ? data.authors : [{ id: '1', name: 'Nombre del Estudiante' }];
   authorList.forEach((author, idx) => {
     const cedulaText = author.cedula && author.cedula.trim() ? ` ${author.cedula.trim()}` : '';
     const lineText = `${author.name.trim() || 'Nombre del Estudiante'}${cedulaText}`;
-    doc.text(lineText, rightAlignX, lowerY + 5.5 * (idx + 1), { align: 'right' });
+    doc.text(lineText, rightAlignX, lowerY + detailsLineHeight * (idx + 1), { align: 'right' });
   });
 
   // 5. Bottom Footer: Ciudad y Fecha
   const footerY = H - 24;
   doc.setFont(font, 'bold');
-  doc.setFontSize(11);
+  doc.setFontSize(footerSize);
 
   const cityPrefix = data.city && data.city.trim() ? `${data.city.trim()}, ` : '';
   const dateText = `${cityPrefix}${data.month} de ${data.year}`;
@@ -269,7 +281,9 @@ export function generateCoverLatexCode(data: CoverData): string {
     .map(a => `${a.name.trim()}${a.cedula ? ` \\\\ ${a.cedula.trim()}` : ''}`)
     .join(' \\\\[0.2cm]\n');
 
-  return `\\documentclass[12pt, ${paperOpt}]{article}
+  const sizeOpt = data.fontSize || '11pt';
+
+  return `\\documentclass[${sizeOpt}, ${paperOpt}]{article}
 \\usepackage[spanish, es-tabla]{babel}
 \\usepackage[utf8]{inputenc}
 \\usepackage[margin=2.5cm]{geometry}
@@ -317,3 +331,4 @@ ${data.membrete.split('\n').filter(Boolean).map(l => `\\textbf{${l}}`).join(' \\
 
 \\end{document}`;
 }
+

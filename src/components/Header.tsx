@@ -105,7 +105,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={() => onToggleMobileTab('editor')}
-              className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1 transition-all ${
                 activeMobileTab === 'editor'
                   ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 shadow-sm'
                   : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
@@ -117,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={() => onToggleMobileTab('preview')}
-              className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1 transition-all ${
                 activeMobileTab === 'preview'
                   ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 shadow-sm'
                   : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
@@ -288,13 +288,12 @@ export const Header: React.FC<HeaderProps> = ({
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 px-2 sm:px-2.5 text-xs text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 font-medium flex items-center gap-1.5 rounded-md transition-colors"
+              className="h-8 w-8 p-0 sm:w-auto sm:px-2.5 text-xs text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 font-medium flex items-center justify-center sm:gap-1.5 rounded-md transition-colors shrink-0"
               onClick={onOpenCoverModal}
               title="Generar portada universitaria en PDF lista para imprimir o anexar"
             >
               <GraduationCap className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span className="hidden sm:inline">Portada PDF</span>
-              <span className="sm:hidden">Portada</span>
             </Button>
           )}
 
