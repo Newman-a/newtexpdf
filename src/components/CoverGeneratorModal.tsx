@@ -5,7 +5,6 @@ import {
   Plus,
   Trash2,
   Upload,
-  Image as ImageIcon,
   Check,
   Copy,
   ExternalLink,
@@ -52,15 +51,15 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
   const [fontSize, setFontSize] = useState<'10pt' | '11pt' | '12pt'>('11pt');
   const [logoLeft, setLogoLeft] = useState<string | null>(null);
   const [logoRight, setLogoRight] = useState<string | null>(null);
-  const [membrete, setMembrete] = useState<string>(''); // Clean empty by default
-  const [title, setTitle] = useState<string>(''); // Clean empty by default
-  const [subtitle, setSubtitle] = useState<string>(''); // Clean empty by default
+  const [membrete, setMembrete] = useState<string>('');
+  const [title, setTitle] = useState<string>('');
+  const [subtitle, setSubtitle] = useState<string>('');
   const [docenteRole, setDocenteRole] = useState<string>('DOCENTE:');
   const [docenteTitle, setDocenteTitle] = useState<string>('Ing.');
-  const [docenteName, setDocenteName] = useState<string>(''); // Clean empty by default
+  const [docenteName, setDocenteName] = useState<string>('');
   const [authorRole, setAuthorRole] = useState<string>('REALIZADO POR:');
   const [authors, setAuthors] = useState<StudentAuthor[]>([
-    { id: '1', name: '', cedula: '' }, // Clean empty by default
+    { id: '1', name: '', cedula: '' },
   ]);
   const [city, setCity] = useState<string>('');
   const [month, setMonth] = useState<string>(currentMonthName);
@@ -106,18 +105,15 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
   };
 
   const handleUpdateAuthor = (id: string, field: 'name' | 'cedula', val: string) => {
-    setAuthors(prev =>
-      prev.map(a => (a.id === id ? { ...a, [field]: val } : a))
-    );
+    setAuthors(prev => prev.map(a => (a.id === id ? { ...a, [field]: val } : a)));
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>, side: 'left' | 'right') => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
+    reader.onload = ev => {
+      const result = ev.target?.result as string;
       if (side === 'left') setLogoLeft(result);
       else setLogoRight(result);
     };
@@ -141,8 +137,8 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
   };
 
   const handleOpenNewTab = () => {
-    const url = getCoverPdfBlobUrl(coverData);
-    window.open(url, '_blank');
+    const blobUrl = getCoverPdfBlobUrl(coverData);
+    window.open(blobUrl, '_blank');
   };
 
   const handleCopyLatex = async () => {
@@ -156,106 +152,94 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
     }
   };
 
-  // Aspect ratio styling for realistic sheet preview
   const paperAspect = paperType === 'legal' ? 'aspect-[8.5/14]' : paperType === 'a4' ? 'aspect-[210/297]' : 'aspect-[8.5/11]';
-
-  // Font size scale class for visual sheet
   const fontSizeClass = fontSize === '10pt' ? 'text-[90%]' : fontSize === '12pt' ? 'text-[110%]' : 'text-[100%]';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-5xl h-[94vh] sm:h-[92vh] flex flex-col bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden text-slate-900 dark:text-zinc-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+      <div className="relative w-full max-w-5xl h-[92vh] flex flex-col bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl shadow-xl overflow-hidden text-slate-800 dark:text-zinc-100">
         
-        {/* Modal Header */}
-        <div className="flex items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 border-b border-slate-200 dark:border-zinc-800 bg-slate-50/90 dark:bg-zinc-950/60 shrink-0">
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-sm shadow-emerald-600/30 shrink-0">
-              <GraduationCap className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-xs sm:text-base font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
-                Generador de Portada Universitaria (PDF)
-              </h2>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-zinc-400 hidden xs:block">
-                Crea una portada institucional oficial con formato exacto sin necesidad de laptop
-              </p>
-            </div>
+        {/* Minimalist Modal Header */}
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-100 dark:border-zinc-800 shrink-0">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-zinc-100">
+              Generador de Portada
+            </h2>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Mobile View Toggle (Formulario vs Vista Previa) */}
-            <div className="flex lg:hidden bg-slate-200 dark:bg-zinc-800 p-0.5 rounded-lg text-xs">
+          <div className="flex items-center gap-2">
+            {/* Mobile View Toggle */}
+            <div className="flex lg:hidden bg-slate-100 dark:bg-zinc-800 p-0.5 rounded-lg text-xs">
               <button
                 type="button"
                 onClick={() => setActiveTab('form')}
-                className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                   activeTab === 'form'
                     ? 'bg-white dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
-                    : 'text-slate-600 dark:text-zinc-400'
+                    : 'text-slate-500 dark:text-zinc-400'
                 }`}
               >
-                Datos
+                Formulario
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('preview')}
-                className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                   activeTab === 'preview'
                     ? 'bg-white dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
-                    : 'text-slate-600 dark:text-zinc-400'
+                    : 'text-slate-500 dark:text-zinc-400'
                 }`}
               >
-                Vista Previa
+                Vista previa
               </button>
             </div>
 
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="sm"
               onClick={onClose}
-              className="h-8 w-8 p-0 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 rounded-lg"
-              title="Cerrar ventana"
+              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 rounded-lg transition-colors"
+              title="Cerrar"
             >
               <X className="w-4 h-4" />
-            </Button>
+            </button>
           </div>
         </div>
 
-        {/* Modal Body: Split Form & Live Preview */}
+        {/* Modal Body */}
         <div className="flex-1 flex overflow-hidden">
           
-          {/* Left Column: Form Controls */}
+          {/* Left Column: Minimal Form */}
           <div
-            className={`w-full lg:w-1/2 h-full overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-5 border-r border-slate-200 dark:border-zinc-800 ${
+            className={`w-full lg:w-1/2 h-full overflow-y-auto px-4 sm:px-6 py-4 space-y-4 border-r border-slate-100 dark:border-zinc-800 ${
               activeTab === 'form' ? 'block' : 'hidden lg:block'
             }`}
           >
-            {/* Paper Type, Typography & Font Size */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/80 dark:border-zinc-800">
+            {/* 1. Document Format & Typography (Inline Minimal Bar) */}
+            <div className="grid grid-cols-3 gap-2 pb-1">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 dark:text-zinc-300 mb-1">
-                  Formato de Hoja
+                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                  Hoja
                 </label>
                 <select
                   value={paperType}
                   onChange={e => setPaperType(e.target.value as CoverPaperType)}
-                  className="w-full text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md p-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
+                  className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
                   <option value="letter">Carta (Letter)</option>
-                  <option value="a4">A4 (210×297 mm)</option>
+                  <option value="a4">A4 (210×297)</option>
                   <option value="legal">Oficio (Legal)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
                   Tipografía
                 </label>
                 <select
                   value={fontFamily}
                   onChange={e => setFontFamily(e.target.value as 'times' | 'helvetica')}
-                  className="w-full text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md p-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
+                  className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
                   <option value="times">Times New Roman</option>
                   <option value="helvetica">Arial (Sans)</option>
@@ -263,132 +247,102 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 dark:text-zinc-300 mb-1">
-                  Tamaño de Letra
+                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                  Tamaño
                 </label>
                 <select
                   value={fontSize}
                   onChange={e => setFontSize(e.target.value as '10pt' | '11pt' | '12pt')}
-                  className="w-full text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md p-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
+                  className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
-                  <option value="10pt">10 pt (Compacto)</option>
-                  <option value="11pt">11 pt (Estándar)</option>
-                  <option value="12pt">12 pt (Grande / Tradicional)</option>
+                  <option value="10pt">10 pt</option>
+                  <option value="11pt">11 pt</option>
+                  <option value="12pt">12 pt</option>
                 </select>
               </div>
             </div>
 
-            {/* Optional Logos Upload (1 or 2 logos) */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                  <span>Logos Institucionales (Opcionales)</span>
-                </label>
-                <span className="text-[10px] text-slate-400">PNG o JPG sin fondo</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {/* Logo Left */}
-                <div className="border border-dashed border-slate-300 dark:border-zinc-700 rounded-xl p-2.5 text-center bg-slate-50/50 dark:bg-zinc-950/40 relative">
-                  <input
-                    type="file"
-                    ref={fileInputLeftRef}
-                    accept="image/*"
-                    onChange={e => handleLogoUpload(e, 'left')}
-                    className="hidden"
-                  />
-                  {logoLeft ? (
-                    <div className="flex flex-col items-center gap-1.5">
-                      <img src={logoLeft} alt="Logo Izquierdo" className="h-12 max-w-full object-contain mx-auto" />
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => fileInputLeftRef.current?.click()}
-                          className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                          Cambiar
-                        </button>
-                        <span className="text-slate-300">•</span>
-                        <button
-                          type="button"
-                          onClick={() => setLogoLeft(null)}
-                          className="text-[10px] text-red-500 hover:underline"
-                        >
-                          Quitar
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
+            {/* 2. Optional Logos (Sleek Compact Badges) */}
+            <div className="pt-1">
+              <span className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1.5">
+                Logos institucionales (opcional)
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                {/* Left Logo */}
+                <input
+                  type="file"
+                  ref={fileInputLeftRef}
+                  accept="image/*"
+                  onChange={e => handleLogoUpload(e, 'left')}
+                  className="hidden"
+                />
+                {logoLeft ? (
+                  <div className="flex items-center justify-between p-2 border border-slate-200 dark:border-zinc-700 rounded-lg bg-slate-50/50 dark:bg-zinc-800/40">
+                    <img src={logoLeft} alt="Logo 1" className="h-6 max-w-[60px] object-contain" />
                     <button
                       type="button"
-                      onClick={() => fileInputLeftRef.current?.click()}
-                      className="w-full flex flex-col items-center justify-center py-2 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
+                      onClick={() => setLogoLeft(null)}
+                      className="text-[10px] text-slate-400 hover:text-red-500"
                     >
-                      <Upload className="w-4 h-4 mb-1 text-slate-400" />
-                      <span className="text-[11px] font-medium">Cargar Logo 1 (Izq)</span>
+                      Quitar
                     </button>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputLeftRef.current?.click()}
+                    className="flex items-center justify-center gap-1.5 p-2 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 border border-dashed border-slate-200 dark:border-zinc-700 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors"
+                  >
+                    <Upload className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="text-[11px]">Logo 1 (Izq)</span>
+                  </button>
+                )}
 
-                {/* Logo Right */}
-                <div className="border border-dashed border-slate-300 dark:border-zinc-700 rounded-xl p-2.5 text-center bg-slate-50/50 dark:bg-zinc-950/40 relative">
-                  <input
-                    type="file"
-                    ref={fileInputRightRef}
-                    accept="image/*"
-                    onChange={e => handleLogoUpload(e, 'right')}
-                    className="hidden"
-                  />
-                  {logoRight ? (
-                    <div className="flex flex-col items-center gap-1.5">
-                      <img src={logoRight} alt="Logo Derecho" className="h-12 max-w-full object-contain mx-auto" />
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => fileInputRightRef.current?.click()}
-                          className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                          Cambiar
-                        </button>
-                        <span className="text-slate-300">•</span>
-                        <button
-                          type="button"
-                          onClick={() => setLogoRight(null)}
-                          className="text-[10px] text-red-500 hover:underline"
-                        >
-                          Quitar
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
+                {/* Right Logo */}
+                <input
+                  type="file"
+                  ref={fileInputRightRef}
+                  accept="image/*"
+                  onChange={e => handleLogoUpload(e, 'right')}
+                  className="hidden"
+                />
+                {logoRight ? (
+                  <div className="flex items-center justify-between p-2 border border-slate-200 dark:border-zinc-700 rounded-lg bg-slate-50/50 dark:bg-zinc-800/40">
+                    <img src={logoRight} alt="Logo 2" className="h-6 max-w-[60px] object-contain" />
                     <button
                       type="button"
-                      onClick={() => fileInputRightRef.current?.click()}
-                      className="w-full flex flex-col items-center justify-center py-2 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200"
+                      onClick={() => setLogoRight(null)}
+                      className="text-[10px] text-slate-400 hover:text-red-500"
                     >
-                      <Upload className="w-4 h-4 mb-1 text-slate-400" />
-                      <span className="text-[11px] font-medium">Cargar Logo 2 (Der)</span>
+                      Quitar
                     </button>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRightRef.current?.click()}
+                    className="flex items-center justify-center gap-1.5 p-2 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 border border-dashed border-slate-200 dark:border-zinc-700 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors"
+                  >
+                    <Upload className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="text-[11px]">Logo 2 (Der)</span>
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* Membrete de la Universidad */}
-            <div>
+            {/* 3. Membrete */}
+            <div className="pt-1">
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-bold text-slate-800 dark:text-zinc-200">
-                  Membrete Institucional (Centrado)
+                <label className="text-[10px] font-medium text-slate-500 dark:text-zinc-400">
+                  Membrete (Centrado)
                 </label>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setMembrete(DEFAULT_MEMBRETE)}
                     className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
-                    title="Cargar ejemplo de membrete oficial"
                   >
-                    <Sparkles className="w-3 h-3" /> Cargar ejemplo
+                    <Sparkles className="w-2.5 h-2.5" /> Ejemplo
                   </button>
                   {membrete && (
                     <button
@@ -404,170 +358,161 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
               <textarea
                 value={membrete}
                 onChange={e => setMembrete(e.target.value)}
-                rows={4}
+                rows={3}
                 placeholder="MEMBRETE DE LA UNIVERSIDAD..."
-                className="w-full text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl p-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 leading-relaxed font-serif"
+                className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 leading-relaxed font-serif"
               />
-              <p className="text-[10px] text-slate-400 mt-0.5">
-                Cada salto de línea quedará centrado en el encabezado.
-              </p>
             </div>
 
-            {/* Title & Subtitle */}
-            <div className="space-y-2.5">
+            {/* 4. Título & Subtítulo */}
+            <div className="space-y-2 pt-1">
               <div>
-                <label className="block text-xs font-bold text-slate-800 dark:text-zinc-200 mb-1">
-                  Título de la Actividad (En el medio)
+                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                  Título de la Actividad
                 </label>
                 <textarea
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   rows={2}
-                  placeholder="Ej: INFORME DE LABORATORIO / ENSAYO ACADÉMICO / TESIS"
-                  className="w-full text-xs font-bold uppercase bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl p-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-serif"
+                  placeholder="TÍTULO DE LA ACTIVIDAD..."
+                  className="w-full text-xs font-semibold uppercase bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-serif"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
-                  Asignatura / Cátedra o Subtítulo (Opcional)
+                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                  Asignatura / Cátedra (Opcional)
                 </label>
                 <input
                   type="text"
                   value={subtitle}
                   onChange={e => setSubtitle(e.target.value)}
-                  placeholder="Ej: Cátedra: Cálculo Diferencial e Integral"
-                  className="w-full text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  placeholder="Ej: Cátedra: Cálculo Diferencial"
+                  className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
             </div>
 
-            {/* Docente / Maestro (Left Side) */}
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/80 dark:border-zinc-800 space-y-2">
-              <label className="block text-xs font-bold text-slate-800 dark:text-zinc-200">
-                Datos del Docente (Lado Izquierdo)
-              </label>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <div>
-                  <label className="block text-[10px] text-slate-500 dark:text-zinc-400 mb-0.5">Etiqueta</label>
+            {/* 5. Docente & Autores */}
+            <div className="space-y-3 pt-1">
+              {/* Docente */}
+              <div>
+                <span className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                  Docente
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <select
                     value={docenteRole}
                     onChange={e => setDocenteRole(e.target.value)}
-                    className="w-full text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md p-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   >
                     {DOCENTE_ROLE_OPTIONS.map(opt => (
                       <option key={opt} value={opt}>{opt}</option>
                     ))}
                   </select>
-                </div>
 
-                <div>
-                  <label className="block text-[10px] text-slate-500 dark:text-zinc-400 mb-0.5">Título / Prefijo</label>
                   <select
                     value={docenteTitle}
                     onChange={e => setDocenteTitle(e.target.value)}
-                    className="w-full text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md p-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   >
                     {DOCENTE_TITLE_OPTIONS.map(opt => (
                       <option key={opt} value={opt}>{opt}</option>
                     ))}
                   </select>
-                </div>
 
-                <div>
-                  <label className="block text-[10px] text-slate-500 dark:text-zinc-400 mb-0.5">Nombre y Apellido</label>
                   <input
                     type="text"
                     value={docenteName}
                     onChange={e => setDocenteName(e.target.value)}
                     placeholder="Nombre del Docente"
-                    className="w-full text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md p-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
+                    className="text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
               </div>
-            </div>
 
-            {/* Autores / Estudiantes (Right Side) */}
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/80 dark:border-zinc-800 space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-800 dark:text-zinc-200">
-                  Estudiantes / Autores (Lado Derecho)
-                </label>
-                <select
-                  value={authorRole}
-                  onChange={e => setAuthorRole(e.target.value)}
-                  className="text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
-                >
-                  {AUTHOR_ROLE_OPTIONS.map(opt => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                {authors.map((author, index) => (
-                  <div key={author.id} className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-slate-400 w-3 font-mono">{index + 1}.</span>
-                    <input
-                      type="text"
-                      value={author.name}
-                      onChange={e => handleUpdateAuthor(author.id, 'name', e.target.value)}
-                      placeholder="Nombre del Estudiante"
-                      className="flex-1 text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md p-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                    <input
-                      type="text"
-                      value={author.cedula || ''}
-                      onChange={e => handleUpdateAuthor(author.id, 'cedula', e.target.value)}
-                      placeholder="C.I. (opcional)"
-                      className="w-28 sm:w-32 text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md p-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                    {authors.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveAuthor(author.id)}
-                        className="text-slate-400 hover:text-red-500 p-1 rounded shrink-0"
-                        title="Eliminar estudiante"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddAuthor}
-                className="w-full text-xs h-7 border-dashed border-slate-300 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 flex items-center justify-center gap-1.5 mt-2"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Agregar otro estudiante</span>
-              </Button>
-            </div>
-
-            {/* Fecha y Ciudad (Pie de Página) */}
-            <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/80 dark:border-zinc-800">
+              {/* Autores */}
               <div>
-                <label className="block text-[10px] text-slate-500 dark:text-zinc-400 mb-0.5">Ciudad (Opcional)</label>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-medium text-slate-500 dark:text-zinc-400">
+                    Estudiantes / Autores
+                  </span>
+                  <select
+                    value={authorRole}
+                    onChange={e => setAuthorRole(e.target.value)}
+                    className="text-[11px] bg-transparent text-slate-500 dark:text-zinc-400 border-none p-0 focus:outline-none cursor-pointer"
+                  >
+                    {AUTHOR_ROLE_OPTIONS.map(opt => (
+                      <option key={opt} value={opt} className="dark:bg-zinc-900">{opt}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  {authors.map((author, index) => (
+                    <div key={author.id} className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-slate-400 w-3">{index + 1}.</span>
+                      <input
+                        type="text"
+                        value={author.name}
+                        onChange={e => handleUpdateAuthor(author.id, 'name', e.target.value)}
+                        placeholder="Nombre y Apellido"
+                        className="flex-1 text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                      <input
+                        type="text"
+                        value={author.cedula || ''}
+                        onChange={e => handleUpdateAuthor(author.id, 'cedula', e.target.value)}
+                        placeholder="C.I. (opcional)"
+                        className="w-28 text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                      {authors.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAuthor(author.id)}
+                          className="p-1 text-slate-400 hover:text-red-500 rounded"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAddAuthor}
+                  className="mt-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" /> Agregar otro estudiante
+                </button>
+              </div>
+            </div>
+
+            {/* 6. Ciudad y Fecha */}
+            <div className="grid grid-cols-3 gap-2 pt-1">
+              <div>
+                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                  Ciudad (Opcional)
+                </label>
                 <input
                   type="text"
                   value={city}
                   onChange={e => setCity(e.target.value)}
                   placeholder="Ej: Ciudad"
-                  className="w-full text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md p-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] text-slate-500 dark:text-zinc-400 mb-0.5">Mes</label>
+                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                  Mes
+                </label>
                 <select
                   value={month}
                   onChange={e => setMonth(e.target.value)}
-                  className="w-full text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md p-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
                   {MONTH_OPTIONS.map(m => (
                     <option key={m} value={m}>{m}</option>
@@ -576,45 +521,47 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] text-slate-500 dark:text-zinc-400 mb-0.5">Año</label>
+                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                  Año
+                </label>
                 <input
                   type="text"
                   value={year}
                   onChange={e => setYear(e.target.value)}
                   placeholder="2026"
-                  className="w-full text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md p-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                  className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
                 />
               </div>
             </div>
 
-            {/* Reset Form Button */}
-            <div className="pt-1 flex justify-end">
+            {/* Reset Fields */}
+            <div className="pt-2 flex justify-end">
               <button
                 type="button"
                 onClick={handleClearAll}
-                className="text-[11px] text-slate-500 hover:text-red-500 flex items-center gap-1 transition-colors"
+                className="text-[10px] text-slate-400 hover:text-red-500 flex items-center gap-1 transition-colors"
               >
-                <RotateCcw className="w-3 h-3" />
-                <span>Vaciar todos los campos</span>
+                <RotateCcw className="w-2.5 h-2.5" />
+                <span>Vaciar formulario</span>
               </button>
             </div>
           </div>
 
-          {/* Right Column: Live Visual Sheet Preview */}
+          {/* Right Column: Clean Paper Sheet Preview */}
           <div
-            className={`w-full lg:w-1/2 h-full bg-slate-100 dark:bg-zinc-950 p-2 sm:p-6 flex flex-col items-center justify-center overflow-y-auto ${
+            className={`w-full lg:w-1/2 h-full bg-slate-50/70 dark:bg-zinc-950/40 p-4 sm:p-6 flex flex-col items-center justify-center overflow-y-auto ${
               activeTab === 'preview' ? 'flex' : 'hidden lg:flex'
             }`}
           >
-            {/* The Realistic Paper Sheet */}
+            {/* The Paper Sheet */}
             <div
-              className={`w-full max-w-[340px] sm:max-w-[420px] bg-white text-black shadow-2xl rounded-sm p-5 sm:p-8 flex flex-col justify-between border border-slate-200 transition-all ${paperAspect} ${fontSizeClass} select-none font-serif`}
+              className={`w-full max-w-[340px] sm:max-w-[400px] bg-white text-black shadow-lg rounded-sm p-5 sm:p-7 flex flex-col justify-between border border-slate-200/80 transition-all ${paperAspect} ${fontSizeClass} select-none font-serif`}
               style={{ fontFamily: fontFamily === 'helvetica' ? 'Arial, sans-serif' : '"Times New Roman", Times, serif' }}
             >
               {/* Header: Logos + Membrete */}
-              <div className="relative w-full flex items-start justify-between min-h-[50px] sm:min-h-[64px]">
+              <div className="relative w-full flex items-start justify-between min-h-[46px] sm:min-h-[56px]">
                 {logoLeft && (
-                  <div className="w-10 sm:w-12 h-10 sm:h-12 flex-shrink-0 flex items-center justify-center">
+                  <div className="w-9 sm:w-11 h-9 sm:h-11 flex-shrink-0 flex items-center justify-center">
                     <img src={logoLeft} alt="Logo 1" className="max-h-full max-w-full object-contain" />
                   </div>
                 )}
@@ -622,21 +569,21 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                 <div className="flex-1 text-center px-1">
                   {membrete.trim() ? (
                     membrete.split('\n').filter(Boolean).map((line, idx) => (
-                      <p key={idx} className="text-[7.5px] sm:text-[9.5px] font-bold leading-tight uppercase tracking-tight text-slate-900">
+                      <p key={idx} className="text-[7.5px] sm:text-[9px] font-bold leading-tight uppercase tracking-tight text-slate-900">
                         {line.trim()}
                       </p>
                     ))
                   ) : (
-                    <div className="py-1 px-2 border border-dashed border-slate-300 rounded text-center">
-                      <p className="text-[7.5px] sm:text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">
-                        [MEMBRETE DE LA UNIVERSIDAD]
+                    <div className="py-1 px-2 border border-dashed border-slate-200 rounded text-center">
+                      <p className="text-[7.5px] sm:text-[8.5px] text-slate-300 font-bold uppercase tracking-wider">
+                        MEMBRETE DE LA UNIVERSIDAD
                       </p>
                     </div>
                   )}
                 </div>
 
                 {logoRight && (
-                  <div className="w-10 sm:w-12 h-10 sm:h-12 flex-shrink-0 flex items-center justify-center">
+                  <div className="w-9 sm:w-11 h-9 sm:h-11 flex-shrink-0 flex items-center justify-center">
                     <img src={logoRight} alt="Logo 2" className="max-h-full max-w-full object-contain" />
                   </div>
                 )}
@@ -649,30 +596,30 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                     {title.trim()}
                   </h1>
                 ) : (
-                  <div className="py-2.5 px-3 border border-dashed border-slate-300 rounded text-center">
-                    <h1 className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400">
-                      [TÍTULO DE LA ACTIVIDAD]
+                  <div className="py-2 px-3 border border-dashed border-slate-200 rounded text-center">
+                    <h1 className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-300">
+                      TÍTULO DE LA ACTIVIDAD
                     </h1>
                   </div>
                 )}
 
                 {subtitle && subtitle.trim() && (
-                  <p className="text-[8.5px] sm:text-[10px] text-slate-700 italic mt-2 px-2">
+                  <p className="text-[8.5px] sm:text-[10px] text-slate-600 italic mt-1.5 px-2">
                     {subtitle.trim()}
                   </p>
                 )}
               </div>
 
               {/* Bottom: Docente (Left) & Realizado por (Right) */}
-              <div className="w-full flex items-start justify-between pt-3 text-[7.5px] sm:text-[9.5px] leading-tight">
+              <div className="w-full flex items-start justify-between pt-2 text-[7.5px] sm:text-[9px] leading-tight">
                 {/* Docente */}
                 <div className="text-left max-w-[48%]">
                   <p className="font-bold text-slate-900 uppercase">{docenteRole}</p>
-                  <p className="text-slate-800 mt-0.5">
+                  <p className="text-slate-700 mt-0.5">
                     {docenteName.trim() ? (
                       `${docenteTitle && docenteTitle !== 'Sin título' ? `${docenteTitle} ` : ''}${docenteName.trim()}`
                     ) : (
-                      <span className="text-slate-400 italic">[Nombre del Docente]</span>
+                      <span className="text-slate-300 italic">[Nombre del Docente]</span>
                     )}
                   </p>
                 </div>
@@ -684,69 +631,69 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                     {authors.some(a => a.name.trim()) ? (
                       authors.map((auth, idx) => (
                         auth.name.trim() ? (
-                          <p key={idx} className="text-slate-800">
+                          <p key={idx} className="text-slate-700">
                             {auth.name.trim()}
                             {auth.cedula && auth.cedula.trim() ? ` (${auth.cedula.trim()})` : ''}
                           </p>
                         ) : null
                       ))
                     ) : (
-                      <p className="text-slate-400 italic">[Nombre del Estudiante]</p>
+                      <p className="text-slate-300 italic">[Nombre del Estudiante]</p>
                     )}
                   </div>
                 </div>
               </div>
 
               {/* Footer: Ciudad y Fecha */}
-              <div className="text-center pt-4 sm:pt-6 text-[8.5px] sm:text-[10px] font-bold text-slate-900">
+              <div className="text-center pt-4 text-[8px] sm:text-[9.5px] font-bold text-slate-900">
                 {city.trim() ? `${city.trim()}, ` : ''}{month} de {year}
               </div>
             </div>
 
             <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-2 text-center">
-              Previsualización a escala {paperType.toUpperCase()} ({fontSize})
+              Vista previa {paperType.toUpperCase()} ({fontSize})
             </p>
           </div>
         </div>
 
-        {/* Modal Footer / Action Bar */}
-        <div className="px-3 sm:px-6 py-2.5 sm:py-3 border-t border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        {/* Minimalist Action Bar */}
+        <div className="px-4 sm:px-6 py-2.5 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between gap-2 shrink-0 bg-white dark:bg-zinc-900">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={handleCopyLatex}
-              className="h-8 px-2 sm:px-2.5 text-xs text-slate-700 dark:text-zinc-300 border-slate-300 dark:border-zinc-700 flex items-center gap-1.5 rounded-lg"
-              title="Copiar código LaTeX de la portada"
+              className="h-8 px-2 sm:px-2.5 text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 flex items-center gap-1.5 rounded-lg"
+              title="Copiar código LaTeX"
             >
               {copiedLatex ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">{copiedLatex ? 'LaTeX Copiado' : 'Copiar LaTeX'}</span>
+              <span className="hidden sm:inline">{copiedLatex ? 'Copiado' : 'Copiar LaTeX'}</span>
             </Button>
 
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={handleOpenNewTab}
-              className="h-8 px-2 sm:px-2.5 text-xs text-slate-700 dark:text-zinc-300 border-slate-300 dark:border-zinc-700 flex items-center gap-1.5 rounded-lg"
-              title="Abrir PDF en pestaña para visualizar o imprimir"
+              className="h-8 px-2 sm:px-2.5 text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 flex items-center gap-1.5 rounded-lg"
+              title="Ver PDF en pestaña"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Ver PDF</span>
             </Button>
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="default"
               size="sm"
               onClick={handleDownload}
-              className="h-9 px-3.5 sm:px-4 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 flex items-center gap-1.5 sm:gap-2 rounded-xl"
+              className="h-8 px-3.5 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm flex items-center gap-1.5"
             >
-              <Download className="w-4 h-4" />
-              <span>Descargar Portada PDF</span>
+              <Download className="w-3.5 h-3.5" />
+              <span>Descargar PDF</span>
             </Button>
           </div>
         </div>
