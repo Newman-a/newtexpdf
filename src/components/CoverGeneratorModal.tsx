@@ -603,10 +603,14 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
               style={{ fontFamily: fontFamily === 'helvetica' ? 'Arial, sans-serif' : '"Times New Roman", Times, serif' }}
             >
               {/* Header: Logos + Membrete */}
-              <div className="relative w-full flex items-start justify-between min-h-[46px] sm:min-h-[56px]">
+              <div className="relative w-full flex items-start justify-between min-h-[46px] sm:min-h-[56px] gap-1.5">
                 {logoLeft && (
                   <div className="w-8 sm:w-11 h-8 sm:h-11 flex-shrink-0 flex items-center justify-center">
-                    <img src={logoLeft} alt="Logo 1" className="max-h-full max-w-full object-contain" />
+                    <img
+                      src={logoLeft}
+                      alt="Logo Izquierdo"
+                      className="max-h-full max-w-full w-auto h-auto object-contain object-center"
+                    />
                   </div>
                 )}
 
@@ -628,7 +632,11 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
 
                 {logoRight && (
                   <div className="w-8 sm:w-11 h-8 sm:h-11 flex-shrink-0 flex items-center justify-center">
-                    <img src={logoRight} alt="Logo 2" className="max-h-full max-w-full object-contain" />
+                    <img
+                      src={logoRight}
+                      alt="Logo Derecho"
+                      className="max-h-full max-w-full w-auto h-auto object-contain object-center"
+                    />
                   </div>
                 )}
               </div>

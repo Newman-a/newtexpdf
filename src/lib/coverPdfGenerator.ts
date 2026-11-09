@@ -119,31 +119,54 @@ export function createCoverPdfDocument(data: CoverData): jsPDF {
   const marginX = 25;
   const marginY = 24;
 
-  // 1. Logos (Left and Right)
-  const logoBoxSize = 25; // max width/height in mm
+  // 1. Logos (Left and Right) with strict original aspect ratio preservation
+  const logoBoxSize = 25; // max bounding box in mm (width and height)
 
-  if (data.logoLeft) {
+  const addProportionalLogo = (imageData: string, boxX: number, boxY: number) => {
     try {
-      doc.addImage(data.logoLeft, 'PNG', marginX, marginY, logoBoxSize, logoBoxSize);
-    } catch {
+      const props = doc.getImageProperties(imageData);
+      let renderW = logoBoxSize;
+      let renderH = logoBoxSize;
+
+      if (props && props.width > 0 && props.height > 0) {
+        const aspect = props.width / props.height;
+        if (aspect >= 1) {
+          // Wider than tall or square: cap width at logoBoxSize, scale height proportionally
+          renderW = logoBoxSize;
+          renderH = logoBoxSize / aspect;
+        } else {
+          // Taller than wide (portrait): cap height at logoBoxSize, scale width proportionally
+          renderH = logoBoxSize;
+          renderW = logoBoxSize * aspect;
+        }
+      }
+
+      // Center within the reserved bounding box
+      const posX = boxX + (logoBoxSize - renderW) / 2;
+      const posY = boxY + (logoBoxSize - renderH) / 2;
+      const format = props?.fileType || (imageData.startsWith('data:image/jpeg') ? 'JPEG' : 'PNG');
+
+      doc.addImage(imageData, format, posX, posY, renderW, renderH);
+    } catch (err) {
+      console.warn('Fallback adding logo image:', err);
       try {
-        doc.addImage(data.logoLeft, 'JPEG', marginX, marginY, logoBoxSize, logoBoxSize);
-      } catch (err) {
-        console.warn('Could not render left logo image:', err);
+        doc.addImage(imageData, 'PNG', boxX, boxY, logoBoxSize, logoBoxSize);
+      } catch {
+        try {
+          doc.addImage(imageData, 'JPEG', boxX, boxY, logoBoxSize, logoBoxSize);
+        } catch (e2) {
+          console.error('Failed to add logo image to PDF:', e2);
+        }
       }
     }
+  };
+
+  if (data.logoLeft) {
+    addProportionalLogo(data.logoLeft, marginX, marginY);
   }
 
   if (data.logoRight) {
-    try {
-      doc.addImage(data.logoRight, 'PNG', W - marginX - logoBoxSize, marginY, logoBoxSize, logoBoxSize);
-    } catch {
-      try {
-        doc.addImage(data.logoRight, 'JPEG', W - marginX - logoBoxSize, marginY, logoBoxSize, logoBoxSize);
-      } catch (err) {
-        console.warn('Could not render right logo image:', err);
-      }
-    }
+    addProportionalLogo(data.logoRight, W - marginX - logoBoxSize, marginY);
   }
 
   // 2. Centered Membrete
