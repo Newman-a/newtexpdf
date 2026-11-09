@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   X,
   Download,
@@ -11,6 +11,10 @@ import {
   GraduationCap,
   Sparkles,
   RotateCcw,
+  Eye,
+  Edit3,
+  FileText,
+  Loader2,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import {
@@ -44,8 +48,9 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
 
   const [activeTab, setActiveTab] = useState<'form' | 'preview'>('form');
   const [copiedLatex, setCopiedLatex] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
-  // Form State (Default to EMPTY fields as requested)
+  // Form State (Default to empty parameters as requested)
   const [paperType, setPaperType] = useState<CoverPaperType>(initialPaperType);
   const [fontFamily, setFontFamily] = useState<'times' | 'helvetica'>('times');
   const [fontSize, setFontSize] = useState<'10pt' | '11pt' | '12pt'>('11pt');
@@ -67,6 +72,16 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
 
   const fileInputLeftRef = useRef<HTMLInputElement>(null);
   const fileInputRightRef = useRef<HTMLInputElement>(null);
+
+  // Close on Escape key press
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -132,8 +147,13 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
   };
 
   const handleDownload = () => {
-    const safeTitle = (title.trim() || 'portada').toLowerCase().replace(/[^a-z0-9]/gi, '_').substring(0, 30);
-    downloadCoverPdf(coverData, `portada_${safeTitle}.pdf`);
+    setIsDownloading(true);
+    try {
+      const safeTitle = (title.trim() || 'portada').toLowerCase().replace(/[^a-z0-9]/gi, '_').substring(0, 30);
+      downloadCoverPdf(coverData, `portada_${safeTitle}.pdf`);
+    } finally {
+      setTimeout(() => setIsDownloading(false), 800);
+    }
   };
 
   const handleOpenNewTab = () => {
@@ -153,45 +173,56 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
   };
 
   const paperAspect = paperType === 'legal' ? 'aspect-[8.5/14]' : paperType === 'a4' ? 'aspect-[210/297]' : 'aspect-[8.5/11]';
-  const fontSizeClass = fontSize === '10pt' ? 'text-[90%]' : fontSize === '12pt' ? 'text-[110%]' : 'text-[100%]';
+  const fontSizeClass = fontSize === '10pt' ? 'text-[88%]' : fontSize === '12pt' ? 'text-[108%]' : 'text-[100%]';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="relative w-full max-w-5xl h-[92vh] flex flex-col bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl shadow-xl overflow-hidden text-slate-800 dark:text-zinc-100">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="relative w-full max-w-4xl h-[94dvh] sm:h-[88vh] max-h-[840px] flex flex-col bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden text-slate-800 dark:text-zinc-100">
         
-        {/* Minimalist Modal Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-100 dark:border-zinc-800 shrink-0">
+        {/* Minimalist Header with UX Tab Switching */}
+        <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-b border-slate-100 dark:border-zinc-800 shrink-0 bg-white/95 dark:bg-zinc-900/95">
           <div className="flex items-center gap-2">
-            <GraduationCap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <h2 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-zinc-100">
-              Generador de Portada
-            </h2>
+            <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <GraduationCap className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-xs sm:text-sm font-semibold tracking-tight text-slate-900 dark:text-zinc-100">
+                Generador de Portada
+              </h2>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Mobile View Toggle */}
-            <div className="flex lg:hidden bg-slate-100 dark:bg-zinc-800 p-0.5 rounded-lg text-xs">
+            {/* Mobile Tab Switcher */}
+            <div className="flex lg:hidden bg-slate-100 dark:bg-zinc-800/80 p-0.5 rounded-lg text-xs">
               <button
                 type="button"
                 onClick={() => setActiveTab('form')}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                className={`px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1 transition-all ${
                   activeTab === 'form'
                     ? 'bg-white dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
                     : 'text-slate-500 dark:text-zinc-400'
                 }`}
               >
-                Formulario
+                <Edit3 className="w-3 h-3" />
+                <span>Datos</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('preview')}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                className={`px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1 transition-all ${
                   activeTab === 'preview'
                     ? 'bg-white dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
                     : 'text-slate-500 dark:text-zinc-400'
                 }`}
               >
-                Vista previa
+                <Eye className="w-3 h-3" />
+                <span>Vista Previa</span>
               </button>
             </div>
 
@@ -199,7 +230,7 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
               type="button"
               onClick={onClose}
               className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 rounded-lg transition-colors"
-              title="Cerrar"
+              title="Cerrar modal (Esc)"
             >
               <X className="w-4 h-4" />
             </button>
@@ -209,22 +240,22 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
         {/* Modal Body */}
         <div className="flex-1 flex overflow-hidden">
           
-          {/* Left Column: Minimal Form */}
+          {/* Left Column: Form with Smooth Responsive Touch Targets */}
           <div
-            className={`w-full lg:w-1/2 h-full overflow-y-auto px-4 sm:px-6 py-4 space-y-4 border-r border-slate-100 dark:border-zinc-800 ${
+            className={`w-full lg:w-1/2 h-full overflow-y-auto px-4 sm:px-6 py-4 space-y-4 border-r border-slate-100 dark:border-zinc-800 overscroll-contain ${
               activeTab === 'form' ? 'block' : 'hidden lg:block'
             }`}
           >
-            {/* 1. Document Format & Typography (Inline Minimal Bar) */}
-            <div className="grid grid-cols-3 gap-2 pb-1">
+            {/* 1. Format, Typography and Font Size */}
+            <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                <label className="block text-[10px] font-medium text-slate-400 dark:text-zinc-500 mb-1">
                   Hoja
                 </label>
                 <select
                   value={paperType}
                   onChange={e => setPaperType(e.target.value as CoverPaperType)}
-                  className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full text-xs h-9 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 rounded-lg px-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
                 >
                   <option value="letter">Carta (Letter)</option>
                   <option value="a4">A4 (210×297)</option>
@@ -233,13 +264,13 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                <label className="block text-[10px] font-medium text-slate-400 dark:text-zinc-500 mb-1">
                   Tipografía
                 </label>
                 <select
                   value={fontFamily}
                   onChange={e => setFontFamily(e.target.value as 'times' | 'helvetica')}
-                  className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full text-xs h-9 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 rounded-lg px-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
                 >
                   <option value="times">Times New Roman</option>
                   <option value="helvetica">Arial (Sans)</option>
@@ -247,13 +278,13 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                <label className="block text-[10px] font-medium text-slate-400 dark:text-zinc-500 mb-1">
                   Tamaño
                 </label>
                 <select
                   value={fontSize}
                   onChange={e => setFontSize(e.target.value as '10pt' | '11pt' | '12pt')}
-                  className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full text-xs h-9 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 rounded-lg px-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer font-medium"
                 >
                   <option value="10pt">10 pt</option>
                   <option value="11pt">11 pt</option>
@@ -262,13 +293,12 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
               </div>
             </div>
 
-            {/* 2. Optional Logos (Sleek Compact Badges) */}
-            <div className="pt-1">
-              <span className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1.5">
-                Logos institucionales (opcional)
+            {/* 2. Logos (Compact buttons with visual badge) */}
+            <div>
+              <span className="block text-[10px] font-medium text-slate-400 dark:text-zinc-500 mb-1.5">
+                Logos institucionales (Opcional)
               </span>
               <div className="grid grid-cols-2 gap-2">
-                {/* Left Logo */}
                 <input
                   type="file"
                   ref={fileInputLeftRef}
@@ -277,28 +307,28 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                   className="hidden"
                 />
                 {logoLeft ? (
-                  <div className="flex items-center justify-between p-2 border border-slate-200 dark:border-zinc-700 rounded-lg bg-slate-50/50 dark:bg-zinc-800/40">
-                    <img src={logoLeft} alt="Logo 1" className="h-6 max-w-[60px] object-contain" />
+                  <div className="flex items-center justify-between p-1.5 px-2 border border-slate-200 dark:border-zinc-700 rounded-lg bg-slate-50/60 dark:bg-zinc-800/40">
+                    <img src={logoLeft} alt="Logo Izquierdo" className="h-6 max-w-[65px] object-contain" />
                     <button
                       type="button"
                       onClick={() => setLogoLeft(null)}
-                      className="text-[10px] text-slate-400 hover:text-red-500"
+                      className="text-[10px] text-slate-400 hover:text-red-500 p-1"
+                      title="Quitar logo"
                     >
-                      Quitar
+                      <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
                 ) : (
                   <button
                     type="button"
                     onClick={() => fileInputLeftRef.current?.click()}
-                    className="flex items-center justify-center gap-1.5 p-2 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 border border-dashed border-slate-200 dark:border-zinc-700 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors"
+                    className="flex items-center justify-center gap-1.5 h-9 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 border border-dashed border-slate-200 dark:border-zinc-700 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors"
                   >
                     <Upload className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="text-[11px]">Logo 1 (Izq)</span>
+                    <span className="text-[11px]">Logo Izquierdo</span>
                   </button>
                 )}
 
-                {/* Right Logo */}
                 <input
                   type="file"
                   ref={fileInputRightRef}
@@ -307,34 +337,35 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                   className="hidden"
                 />
                 {logoRight ? (
-                  <div className="flex items-center justify-between p-2 border border-slate-200 dark:border-zinc-700 rounded-lg bg-slate-50/50 dark:bg-zinc-800/40">
-                    <img src={logoRight} alt="Logo 2" className="h-6 max-w-[60px] object-contain" />
+                  <div className="flex items-center justify-between p-1.5 px-2 border border-slate-200 dark:border-zinc-700 rounded-lg bg-slate-50/60 dark:bg-zinc-800/40">
+                    <img src={logoRight} alt="Logo Derecho" className="h-6 max-w-[65px] object-contain" />
                     <button
                       type="button"
                       onClick={() => setLogoRight(null)}
-                      className="text-[10px] text-slate-400 hover:text-red-500"
+                      className="text-[10px] text-slate-400 hover:text-red-500 p-1"
+                      title="Quitar logo"
                     >
-                      Quitar
+                      <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
                 ) : (
                   <button
                     type="button"
                     onClick={() => fileInputRightRef.current?.click()}
-                    className="flex items-center justify-center gap-1.5 p-2 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 border border-dashed border-slate-200 dark:border-zinc-700 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors"
+                    className="flex items-center justify-center gap-1.5 h-9 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 border border-dashed border-slate-200 dark:border-zinc-700 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors"
                   >
                     <Upload className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="text-[11px]">Logo 2 (Der)</span>
+                    <span className="text-[11px]">Logo Derecho</span>
                   </button>
                 )}
               </div>
             </div>
 
             {/* 3. Membrete */}
-            <div className="pt-1">
+            <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-[10px] font-medium text-slate-500 dark:text-zinc-400">
-                  Membrete (Centrado)
+                <label className="text-[10px] font-medium text-slate-400 dark:text-zinc-500">
+                  Membrete (Centrado en encabezado)
                 </label>
                 <div className="flex items-center gap-2">
                   <button
@@ -360,27 +391,27 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                 onChange={e => setMembrete(e.target.value)}
                 rows={3}
                 placeholder="MEMBRETE DE LA UNIVERSIDAD..."
-                className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 leading-relaxed font-serif"
+                className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 leading-relaxed font-serif"
               />
             </div>
 
             {/* 4. Título & Subtítulo */}
-            <div className="space-y-2 pt-1">
+            <div className="space-y-2">
               <div>
-                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
-                  Título de la Actividad
+                <label className="block text-[10px] font-medium text-slate-400 dark:text-zinc-500 mb-1">
+                  Título de la Actividad (Centrado en el medio)
                 </label>
                 <textarea
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   rows={2}
                   placeholder="TÍTULO DE LA ACTIVIDAD..."
-                  className="w-full text-xs font-semibold uppercase bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-serif"
+                  className="w-full text-xs font-semibold uppercase bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-serif"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                <label className="block text-[10px] font-medium text-slate-400 dark:text-zinc-500 mb-1">
                   Asignatura / Cátedra (Opcional)
                 </label>
                 <input
@@ -388,23 +419,23 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                   value={subtitle}
                   onChange={e => setSubtitle(e.target.value)}
                   placeholder="Ej: Cátedra: Cálculo Diferencial"
-                  className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full text-xs h-9 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 rounded-lg px-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
             </div>
 
             {/* 5. Docente & Autores */}
-            <div className="space-y-3 pt-1">
+            <div className="space-y-3">
               {/* Docente */}
               <div>
-                <span className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
-                  Docente
+                <span className="block text-[10px] font-medium text-slate-400 dark:text-zinc-500 mb-1">
+                  Docente (Lado izquierdo)
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
                   <select
                     value={docenteRole}
                     onChange={e => setDocenteRole(e.target.value)}
-                    className="text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="text-xs h-9 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 rounded-lg px-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
                   >
                     {DOCENTE_ROLE_OPTIONS.map(opt => (
                       <option key={opt} value={opt}>{opt}</option>
@@ -414,7 +445,7 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                   <select
                     value={docenteTitle}
                     onChange={e => setDocenteTitle(e.target.value)}
-                    className="text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="text-xs h-9 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 rounded-lg px-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
                   >
                     {DOCENTE_TITLE_OPTIONS.map(opt => (
                       <option key={opt} value={opt}>{opt}</option>
@@ -426,16 +457,16 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                     value={docenteName}
                     onChange={e => setDocenteName(e.target.value)}
                     placeholder="Nombre del Docente"
-                    className="text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="text-xs h-9 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 rounded-lg px-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
               </div>
 
               {/* Autores */}
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-medium text-slate-500 dark:text-zinc-400">
-                    Estudiantes / Autores
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-medium text-slate-400 dark:text-zinc-500">
+                    Estudiantes ({authors.length})
                   </span>
                   <select
                     value={authorRole}
@@ -448,34 +479,43 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                   </select>
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {authors.map((author, index) => (
-                    <div key={author.id} className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-slate-400 w-3">{index + 1}.</span>
-                      <input
-                        type="text"
-                        value={author.name}
-                        onChange={e => handleUpdateAuthor(author.id, 'name', e.target.value)}
-                        placeholder="Nombre y Apellido"
-                        className="flex-1 text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                      />
-                      <input
-                        type="text"
-                        value={author.cedula || ''}
-                        onChange={e => handleUpdateAuthor(author.id, 'cedula', e.target.value)}
-                        placeholder="C.I. (opcional)"
-                        className="w-28 text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                      />
-                      {authors.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveAuthor(author.id)}
-                          className="p-1 text-slate-400 hover:text-red-500 rounded"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
+                    <div
+                      key={author.id}
+                      className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 p-2 rounded-lg bg-slate-50/70 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800"
+                    >
+                      <div className="flex items-center gap-1.5 flex-1">
+                        <span className="text-[11px] font-mono text-slate-400 w-3.5 shrink-0 text-center">
+                          {index + 1}.
+                        </span>
+                        <input
+                          type="text"
+                          value={author.name}
+                          onChange={e => handleUpdateAuthor(author.id, 'name', e.target.value)}
+                          placeholder="Nombre y Apellido del estudiante"
+                          className="w-full text-xs h-8 bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-700/80 rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5 pl-5 sm:pl-0">
+                        <input
+                          type="text"
+                          value={author.cedula || ''}
+                          onChange={e => handleUpdateAuthor(author.id, 'cedula', e.target.value)}
+                          placeholder="C.I. (opcional)"
+                          className="w-full sm:w-28 text-xs h-8 bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-700/80 rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        />
+                        {authors.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveAuthor(author.id)}
+                            className="p-1.5 text-slate-400 hover:text-red-500 rounded hover:bg-slate-100 dark:hover:bg-zinc-800 shrink-0 transition-colors"
+                            title="Eliminar estudiante"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -483,17 +523,17 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                 <button
                   type="button"
                   onClick={handleAddAuthor}
-                  className="mt-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+                  className="mt-2 text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-medium"
                 >
-                  <Plus className="w-3 h-3" /> Agregar otro estudiante
+                  <Plus className="w-3.5 h-3.5" /> Agregar otro estudiante
                 </button>
               </div>
             </div>
 
             {/* 6. Ciudad y Fecha */}
-            <div className="grid grid-cols-3 gap-2 pt-1">
+            <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                <label className="block text-[10px] font-medium text-slate-400 dark:text-zinc-500 mb-1">
                   Ciudad (Opcional)
                 </label>
                 <input
@@ -501,18 +541,18 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                   value={city}
                   onChange={e => setCity(e.target.value)}
                   placeholder="Ej: Ciudad"
-                  className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full text-xs h-9 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 rounded-lg px-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                <label className="block text-[10px] font-medium text-slate-400 dark:text-zinc-500 mb-1">
                   Mes
                 </label>
                 <select
                   value={month}
                   onChange={e => setMonth(e.target.value)}
-                  className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full text-xs h-9 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 rounded-lg px-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
                 >
                   {MONTH_OPTIONS.map(m => (
                     <option key={m} value={m}>{m}</option>
@@ -521,7 +561,7 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                <label className="block text-[10px] font-medium text-slate-400 dark:text-zinc-500 mb-1">
                   Año
                 </label>
                 <input
@@ -529,13 +569,13 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                   value={year}
                   onChange={e => setYear(e.target.value)}
                   placeholder="2026"
-                  className="w-full text-xs bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                  className="w-full text-xs h-9 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 rounded-lg px-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
                 />
               </div>
             </div>
 
             {/* Reset Fields */}
-            <div className="pt-2 flex justify-end">
+            <div className="pt-2 pb-1 flex justify-end">
               <button
                 type="button"
                 onClick={handleClearAll}
@@ -547,21 +587,21 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
             </div>
           </div>
 
-          {/* Right Column: Clean Paper Sheet Preview */}
+          {/* Right Column: Clean Responsive Paper Sheet Preview */}
           <div
-            className={`w-full lg:w-1/2 h-full bg-slate-50/70 dark:bg-zinc-950/40 p-4 sm:p-6 flex flex-col items-center justify-center overflow-y-auto ${
+            className={`w-full lg:w-1/2 h-full bg-slate-50/70 dark:bg-zinc-950/40 p-3 sm:p-6 flex flex-col items-center justify-start sm:justify-center overflow-y-auto overscroll-contain ${
               activeTab === 'preview' ? 'flex' : 'hidden lg:flex'
             }`}
           >
             {/* The Paper Sheet */}
             <div
-              className={`w-full max-w-[340px] sm:max-w-[400px] bg-white text-black shadow-lg rounded-sm p-5 sm:p-7 flex flex-col justify-between border border-slate-200/80 transition-all ${paperAspect} ${fontSizeClass} select-none font-serif`}
+              className={`w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[390px] bg-white text-black shadow-lg rounded-sm p-5 sm:p-7 flex flex-col justify-between border border-slate-200/80 transition-all ${paperAspect} ${fontSizeClass} select-none font-serif`}
               style={{ fontFamily: fontFamily === 'helvetica' ? 'Arial, sans-serif' : '"Times New Roman", Times, serif' }}
             >
               {/* Header: Logos + Membrete */}
               <div className="relative w-full flex items-start justify-between min-h-[46px] sm:min-h-[56px]">
                 {logoLeft && (
-                  <div className="w-9 sm:w-11 h-9 sm:h-11 flex-shrink-0 flex items-center justify-center">
+                  <div className="w-8 sm:w-11 h-8 sm:h-11 flex-shrink-0 flex items-center justify-center">
                     <img src={logoLeft} alt="Logo 1" className="max-h-full max-w-full object-contain" />
                   </div>
                 )}
@@ -583,7 +623,7 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                 </div>
 
                 {logoRight && (
-                  <div className="w-9 sm:w-11 h-9 sm:h-11 flex-shrink-0 flex items-center justify-center">
+                  <div className="w-8 sm:w-11 h-8 sm:h-11 flex-shrink-0 flex items-center justify-center">
                     <img src={logoRight} alt="Logo 2" className="max-h-full max-w-full object-contain" />
                   </div>
                 )}
@@ -650,15 +690,25 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
               </div>
             </div>
 
-            <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-2 text-center">
-              Vista previa {paperType.toUpperCase()} ({fontSize})
-            </p>
+            {/* Quick helper for mobile preview */}
+            <div className="flex items-center gap-2 mt-3 lg:hidden">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveTab('form')}
+                className="h-7 text-xs text-slate-600 dark:text-zinc-400 rounded-lg flex items-center gap-1"
+              >
+                <Edit3 className="w-3 h-3" />
+                <span>Volver a editar</span>
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Minimalist Action Bar */}
-        <div className="px-4 sm:px-6 py-2.5 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between gap-2 shrink-0 bg-white dark:bg-zinc-900">
-          <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Minimalist Action Bar (Sticky at bottom, touch-friendly) */}
+        <div className="px-3 sm:px-5 py-2.5 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between gap-2 shrink-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xs">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Button
               type="button"
               variant="ghost"
@@ -689,11 +739,21 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
               type="button"
               variant="default"
               size="sm"
+              disabled={isDownloading}
               onClick={handleDownload}
-              className="h-8 px-3.5 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm flex items-center gap-1.5"
+              className="h-8 px-3.5 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm flex items-center gap-1.5 transition-all"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Descargar PDF</span>
+              {isDownloading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Generando...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Descargar PDF</span>
+                </>
+              )}
             </Button>
           </div>
         </div>
