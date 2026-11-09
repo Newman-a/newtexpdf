@@ -206,24 +206,24 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
 
-          {/* Syntax Help Dialog Trigger (Hidden on tiny mobile, available in sidebar) */}
+          {/* Syntax Help Dialog Trigger (Desktop only, available in mobile dropdown menu) */}
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hidden sm:inline-flex"
+            className="h-8 w-8 p-0 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hidden md:inline-flex"
             onClick={onOpenHelp}
             title="Guía de sintaxis LaTeX y KaTeX"
           >
             <BookOpen className="w-4 h-4" />
           </Button>
 
-          {/* Dark Mode Toggle (Hidden on tiny mobile, available in sidebar) */}
+          {/* Dark Mode Toggle (Desktop only, available in mobile dropdown menu) */}
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hidden sm:inline-flex"
+            className="h-8 w-8 p-0 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hidden md:inline-flex"
             onClick={onToggleDarkMode}
             title={darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           >
@@ -282,18 +282,18 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </Button>
 
-          {/* Action: Generate Academic Cover Page (PDF) */}
+          {/* Action: Generate Academic Cover Page (PDF) - Desktop only outside, on mobile it lives inside the Menu */}
           {onOpenCoverModal && (
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 w-8 p-0 sm:w-auto sm:px-2.5 text-xs text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 font-medium flex items-center justify-center sm:gap-1.5 rounded-md transition-colors shrink-0"
+              className="hidden md:flex h-8 px-2.5 text-xs text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 font-medium items-center gap-1.5 rounded-md transition-colors shrink-0"
               onClick={onOpenCoverModal}
               title="Generar portada universitaria en PDF lista para imprimir o anexar"
             >
               <GraduationCap className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span className="hidden sm:inline">Portada PDF</span>
+              <span>Portada PDF</span>
             </Button>
           )}
 
