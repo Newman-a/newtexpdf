@@ -16,10 +16,6 @@ import {
   Type,
   Layers,
   Sliders,
-  PanelRight,
-  Github,
-  Instagram,
-  ExternalLink,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import {
@@ -48,7 +44,6 @@ interface HeaderDropdownMenuProps {
   onToggleDarkMode: () => void;
   onOpenHelp: () => void;
   onGoToHome: () => void;
-  onOpenSidebar: () => void;
   onPasteClipboard?: () => void;
   onClearEditor?: () => void;
   onCopyAll?: () => void;
@@ -70,7 +65,6 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
   onToggleDarkMode,
   onOpenHelp,
   onGoToHome,
-  onOpenSidebar,
   onPasteClipboard,
   onClearEditor,
   onCopyAll,
@@ -349,45 +343,9 @@ export const HeaderDropdownMenu: React.FC<HeaderDropdownMenuProps> = ({
             )}
           </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={onOpenSidebar}>
-            <PanelRight className="w-3.5 h-3.5 mr-2 text-teal-600" />
-            <span>Ver Panel Lateral</span>
-          </DropdownMenuItem>
-
           <DropdownMenuItem onClick={onGoToHome}>
             <Home className="w-3.5 h-3.5 mr-2 text-slate-400" />
             <span>Inicio / Prompt IA</span>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-
-        <DropdownMenuSeparator />
-
-        {/* Developer & Credits */}
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Desarrollador</DropdownMenuLabel>
-          <DropdownMenuItem asChild>
-            <a
-              href="https://github.com/Newman-a"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center w-full cursor-pointer"
-            >
-              <Github className="w-3.5 h-3.5 mr-2 text-slate-700 dark:text-zinc-300" />
-              <span>GitHub: Newman Acosta</span>
-              <ExternalLink className="w-3 h-3 ml-auto text-slate-400" />
-            </a>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <a
-              href="https://instagram.com/newman.acostaa"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center w-full cursor-pointer"
-            >
-              <Instagram className="w-3.5 h-3.5 mr-2 text-pink-600" />
-              <span>Instagram: @newman.acostaa</span>
-              <ExternalLink className="w-3 h-3 ml-auto text-slate-400" />
-            </a>
           </DropdownMenuItem>
         </DropdownMenuGroup>
 

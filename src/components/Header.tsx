@@ -31,7 +31,6 @@ interface HeaderProps {
   onToggleDarkMode: () => void;
   onOpenHelp: () => void;
   onGoToHome: () => void;
-  onOpenSidebar: () => void;
   activeMobileTab?: 'editor' | 'preview';
   onToggleMobileTab?: (tab: 'editor' | 'preview') => void;
   onPasteClipboard?: () => void;
@@ -55,7 +54,6 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleDarkMode,
   onOpenHelp,
   onGoToHome,
-  onOpenSidebar,
   activeMobileTab = 'editor',
   onToggleMobileTab,
   onPasteClipboard,
@@ -298,7 +296,6 @@ export const Header: React.FC<HeaderProps> = ({
               onToggleDarkMode={onToggleDarkMode}
               onOpenHelp={onOpenHelp}
               onGoToHome={onGoToHome}
-              onOpenSidebar={onOpenSidebar}
               onPasteClipboard={onPasteClipboard}
               onClearEditor={onClearEditor}
               onCopyAll={onCopyAll}

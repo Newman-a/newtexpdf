@@ -5,7 +5,6 @@ import { DocumentPreview } from './components/DocumentPreview';
 import { HelpModal } from './components/HelpModal';
 import { LandingPage } from './components/LandingPage';
 import { ConfirmDialog } from './components/ui/ConfirmDialog';
-import { SidebarDrawer } from './components/SidebarDrawer';
 import { CompileSuccessModal } from './components/CompileSuccessModal';
 import {
   parseLatexToHtml,
@@ -103,7 +102,6 @@ export function App() {
 
   // UI state
   const [helpOpen, setHelpOpen] = useState<boolean>(false);
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const [confirmClearOpen, setConfirmClearOpen] = useState<boolean>(false);
   const [compileSuccessOpen, setCompileSuccessOpen] = useState<boolean>(false);
@@ -361,7 +359,6 @@ export function App() {
         onToggleDarkMode={() => setDarkMode(!darkMode)}
         onOpenHelp={() => setHelpOpen(true)}
         onGoToHome={handleGoToHome}
-        onOpenSidebar={() => setSidebarOpen(true)}
         activeMobileTab={mobileTab}
         onToggleMobileTab={setMobileTab}
         onPasteClipboard={handlePasteClipboard}
@@ -409,30 +406,6 @@ export function App() {
           />
         </section>
       </main>
-
-      {/* Responsive Lateral Drawer */}
-      <SidebarDrawer
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        paperType={paperType}
-        onPaperTypeChange={handlePaperTypeChange}
-        globalFont={globalFont}
-        onGlobalFontChange={handleGlobalFontChange}
-        fontSize={fontSize}
-        onFontSizeChange={handleFontSizeChange}
-        onCompileTectonic={handleCompileTectonic}
-        isCompiling={isCompilingTectonic}
-        onExportDocx={handleExportDocx}
-        isExportingDocx={isExportingDocx}
-        darkMode={darkMode}
-        onToggleDarkMode={() => setDarkMode(!darkMode)}
-        onOpenHelp={() => setHelpOpen(true)}
-        onGoToHome={handleGoToHome}
-        onPasteClipboard={handlePasteClipboard}
-        onClearEditor={handleClear}
-        onCopyAll={handleCopyAll}
-        onDownloadTex={handleDownloadTex}
-      />
 
       {/* Toast Notification */}
       {toastMessage && (

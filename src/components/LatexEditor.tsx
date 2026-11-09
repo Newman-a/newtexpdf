@@ -589,7 +589,7 @@ export const LatexEditor: React.FC<LatexEditorProps> = ({
           </Button>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 overflow-x-auto max-w-full py-0.5 no-scrollbar shrink-0">
           <input
             type="file"
             ref={fileInputRef}
@@ -601,61 +601,70 @@ export const LatexEditor: React.FC<LatexEditorProps> = ({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-xs text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white"
+            className="h-7 px-2 text-xs text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white shrink-0 flex items-center"
             onClick={() => fileInputRef.current?.click()}
             title="Abrir o arrastrar archivo .tex"
           >
-            <Upload className="w-3.5 h-3.5 mr-1" /> Importar .tex
+            <Upload className="w-3.5 h-3.5 sm:mr-1 shrink-0" />
+            <span className="hidden sm:inline">Importar .tex</span>
+            <span className="sm:hidden text-[11px] ml-1">Importar</span>
           </Button>
 
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+            className="h-7 px-2 text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 shrink-0 flex items-center"
             onClick={handleAutoFitTables}
             title="Ajusta automáticamente todas las tablas para que no se corten en el margen derecho del PDF"
           >
-            <Scaling className="w-3.5 h-3.5 mr-1" /> Auto-ajustar Tablas
+            <Scaling className="w-3.5 h-3.5 sm:mr-1 shrink-0" />
+            <span className="hidden sm:inline">Auto-ajustar Tablas</span>
+            <span className="sm:hidden text-[11px] ml-1">Tablas</span>
           </Button>
 
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-xs text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white"
+            className="h-7 px-2 text-xs text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white shrink-0 flex items-center"
             onClick={handleDownloadTex}
             title="Descargar archivo .tex (Ctrl+S)"
           >
-            <Download className="w-3.5 h-3.5 mr-1" /> Guardar .tex
+            <Download className="w-3.5 h-3.5 sm:mr-1 shrink-0" />
+            <span className="hidden sm:inline">Guardar .tex</span>
+            <span className="sm:hidden text-[11px] ml-1">Guardar</span>
           </Button>
 
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-xs text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white"
+            className="h-7 px-2 text-xs text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white shrink-0 flex items-center"
             onClick={handlePaste}
             title="Pegar del portapapeles (Ctrl+V)"
           >
-            <ClipboardPaste className="w-3.5 h-3.5 mr-1 text-emerald-600 dark:text-emerald-400" /> Pegar
+            <ClipboardPaste className="w-3.5 h-3.5 mr-1 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="text-[11px] sm:text-xs">Pegar</span>
           </Button>
 
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-xs text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white"
+            className="h-7 px-2 text-xs text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white shrink-0 flex items-center"
             onClick={handleCopy}
             title="Copiar código al portapapeles"
           >
             {copied ? (
               <>
-                <Check className="w-3.5 h-3.5 mr-1 text-emerald-500" /> Copiado
+                <Check className="w-3.5 h-3.5 mr-1 text-emerald-500 shrink-0" />
+                <span className="text-[11px] sm:text-xs">Copiado</span>
               </>
             ) : (
               <>
-                <Copy className="w-3.5 h-3.5 mr-1" /> Copiar
+                <Copy className="w-3.5 h-3.5 mr-1 shrink-0" />
+                <span className="text-[11px] sm:text-xs">Copiar</span>
               </>
             )}
           </Button>
@@ -664,7 +673,7 @@ export const LatexEditor: React.FC<LatexEditorProps> = ({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0 text-slate-400 hover:text-red-500"
+            className="h-7 w-7 p-0 text-slate-400 hover:text-red-500 shrink-0 flex items-center justify-center"
             onClick={onClear}
             title="Limpiar editor"
           >

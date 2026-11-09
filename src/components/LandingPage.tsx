@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Github,
   Instagram,
-  ExternalLink,
 } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -75,6 +74,7 @@ A continuación, aquí tienes los enunciados y datos de la actividad para resolv
 [PEGA AQUÍ EL ENUNCIADO O EJERCICIOS DE TU ACTIVIDAD]`;
 
 export const LandingPage: React.FC<LandingPageProps> = ({
+  onGoToEditor,
   darkMode,
   onToggleDarkMode,
 }) => {
@@ -133,15 +133,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </p>
 
         <div className="flex items-center justify-center gap-3 flex-wrap">
-          <a
-            href="?editor=true"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Button
+            type="button"
+            onClick={onGoToEditor}
             className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm px-6 h-11 shadow-lg shadow-emerald-600/25 rounded-xl transition-all cursor-pointer"
           >
-            <span>Abrir Editor en Nueva Pestaña</span>
-            <ExternalLink className="w-4 h-4" />
-          </a>
+            <span>Abrir Editor LaTeX</span>
+            <ArrowRight className="w-4 h-4" />
+          </Button>
 
           <Button
             type="button"
@@ -276,17 +275,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="mt-12 text-center p-8 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-xl">
           <h3 className="text-xl sm:text-2xl font-bold mb-2">¿Listo para editar tu trabajo?</h3>
           <p className="text-emerald-100 text-xs sm:text-sm max-w-xl mx-auto mb-6">
-            Abre el editor en una pestaña independiente para redactar y compilar tu documento con total comodidad.
+            Ingresa directamente al editor para redactar y compilar tu documento con total comodidad.
           </p>
-          <a
-            href="?editor=true"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Button
+            type="button"
+            onClick={onGoToEditor}
             className="inline-flex items-center justify-center gap-2 bg-white text-emerald-800 hover:bg-slate-100 font-bold text-sm px-6 h-11 shadow-md rounded-xl transition-all cursor-pointer"
           >
-            <span>Abrir Editor en Nueva Pestaña</span>
-            <ExternalLink className="w-4 h-4" />
-          </a>
+            <span>Abrir Editor LaTeX</span>
+            <ArrowRight className="w-4 h-4" />
+          </Button>
         </div>
       </section>
 
