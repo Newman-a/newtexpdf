@@ -19,6 +19,9 @@ import { Button } from './ui/button';
 import {
   CoverData,
   CoverPaperType,
+  LineSpacingType,
+  CoverMargins,
+  MARGIN_PRESETS,
   StudentAuthor,
   DEFAULT_MEMBRETE,
   DOCENTE_ROLE_OPTIONS,
@@ -53,6 +56,15 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
   const [paperType, setPaperType] = useState<CoverPaperType>(initialPaperType);
   const [fontFamily, setFontFamily] = useState<'times' | 'helvetica'>('times');
   const [fontSize, setFontSize] = useState<'10pt' | '11pt' | '12pt'>('11pt');
+  const [lineSpacing, setLineSpacing] = useState<LineSpacingType>('1.15');
+  const [marginPreset, setMarginPreset] = useState<string>('apa');
+  const [margins, setMargins] = useState<CoverMargins>({
+    top: 2.5,
+    bottom: 2.5,
+    left: 2.5,
+    right: 2.5,
+  });
+  const [showCustomMargins, setShowCustomMargins] = useState<boolean>(false);
   const [logoLeft, setLogoLeft] = useState<string | null>(null);
   const [logoRight, setLogoRight] = useState<string | null>(null);
   const [membrete, setMembrete] = useState<string>('');
@@ -84,10 +96,27 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
 
   if (!isOpen) return null;
 
+  const handleMarginPresetChange = (presetKey: string) => {
+    setMarginPreset(presetKey);
+    if (presetKey === 'custom') {
+      setShowCustomMargins(true);
+    } else if (MARGIN_PRESETS[presetKey]) {
+      setMargins({ ...MARGIN_PRESETS[presetKey].margins });
+      setShowCustomMargins(false);
+    }
+  };
+
+  const handleCustomMarginChange = (side: keyof CoverMargins, val: number) => {
+    setMarginPreset('custom');
+    setMargins(prev => ({ ...prev, [side]: Math.max(0.5, Math.min(val, 8.0)) }));
+  };
+
   const coverData: CoverData = {
     paperType,
     fontFamily,
     fontSize,
+    lineSpacing,
+    margins,
     logoLeft,
     logoRight,
     membrete,
@@ -143,6 +172,9 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
     setCity('');
     setLogoLeft(null);
     setLogoRight(null);
+    setLineSpacing('1.15');
+    setMarginPreset('apa');
+    setMargins({ top: 2.5, bottom: 2.5, left: 2.5, right: 2.5 });
   };
 
   const handleDownload = () => {
@@ -248,8 +280,8 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
               activeTab === 'form' ? 'block' : 'hidden lg:block'
             }`}
           >
-            {/* 1. Format, Typography & Font Size */}
-            <div className="grid grid-cols-3 gap-2">
+            {/* 1. Format: Hoja, Tipografía, Tamaño e Interlineado */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div>
                 <label className="block text-[11px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
                   Hoja
@@ -292,6 +324,117 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
                   <option value="11pt">11 pt</option>
                   <option value="12pt">12 pt</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
+                  Interlineado
+                </label>
+                <select
+                  value={lineSpacing}
+                  onChange={e => setLineSpacing(e.target.value as LineSpacingType)}
+                  className="w-full text-xs h-10 sm:h-9 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-lg px-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer font-medium"
+                >
+                  <option value="1.0">1.0 (Sencillo)</option>
+                  <option value="1.15">1.15 (Estándar)</option>
+                  <option value="1.5">1.5 (Espacio y medio)</option>
+                  <option value="2.0">2.0 (Doble espacio)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* 2. Márgenes de la Hoja (Personalizables en cm de todos los lados) */}
+            <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-zinc-700/60 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium text-slate-600 dark:text-zinc-300">
+                  Márgenes de la Hoja (cm)
+                </span>
+                <select
+                  value={marginPreset}
+                  onChange={e => handleMarginPresetChange(e.target.value)}
+                  className="text-xs h-7 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer font-medium"
+                >
+                  <option value="apa">Normas APA (2.5 cm)</option>
+                  <option value="tesis">Tesis (Sup: 4cm, Izq: 4cm, Der: 3cm, Inf: 3cm)</option>
+                  <option value="standard">Estándar (3.0 cm)</option>
+                  <option value="compact">Compacto (2.0 cm)</option>
+                  <option value="custom">Personalizado...</option>
+                </select>
+              </div>
+
+              {/* 4 Inputs de márgenes independientes: Superior, Inferior, Izquierdo, Derecho */}
+              <div className="grid grid-cols-4 gap-2 pt-0.5">
+                <div>
+                  <label className="block text-[10px] text-slate-400 dark:text-zinc-500 mb-0.5 text-center">
+                    Superior
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="1.0"
+                      max="6.0"
+                      value={margins.top}
+                      onChange={e => handleCustomMarginChange('top', parseFloat(e.target.value) || 2.5)}
+                      className="w-full text-center text-xs h-8 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-md pr-4 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                    />
+                    <span className="absolute right-1 text-[9px] text-slate-400 pointer-events-none">cm</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-400 dark:text-zinc-500 mb-0.5 text-center">
+                    Inferior
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="1.0"
+                      max="6.0"
+                      value={margins.bottom}
+                      onChange={e => handleCustomMarginChange('bottom', parseFloat(e.target.value) || 2.5)}
+                      className="w-full text-center text-xs h-8 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-md pr-4 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                    />
+                    <span className="absolute right-1 text-[9px] text-slate-400 pointer-events-none">cm</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-400 dark:text-zinc-500 mb-0.5 text-center">
+                    Izquierdo
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="1.0"
+                      max="6.0"
+                      value={margins.left}
+                      onChange={e => handleCustomMarginChange('left', parseFloat(e.target.value) || 2.5)}
+                      className="w-full text-center text-xs h-8 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-md pr-4 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                    />
+                    <span className="absolute right-1 text-[9px] text-slate-400 pointer-events-none">cm</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-400 dark:text-zinc-500 mb-0.5 text-center">
+                    Derecho
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="1.0"
+                      max="6.0"
+                      value={margins.right}
+                      onChange={e => handleCustomMarginChange('right', parseFloat(e.target.value) || 2.5)}
+                      className="w-full text-center text-xs h-8 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-md pr-4 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                    />
+                    <span className="absolute right-1 text-[9px] text-slate-400 pointer-events-none">cm</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -599,8 +742,15 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
           >
             {/* The Scaled Paper Sheet */}
             <div
-              className={`w-full max-w-[320px] xs:max-w-[350px] sm:max-w-[390px] bg-white text-black shadow-xl rounded-sm p-5 sm:p-7 flex flex-col justify-between border border-slate-200/90 transition-all ${paperAspect} ${fontSizeClass} select-none font-serif`}
-              style={{ fontFamily: fontFamily === 'helvetica' ? 'Arial, sans-serif' : '"Times New Roman", Times, serif' }}
+              className={`w-full max-w-[320px] xs:max-w-[350px] sm:max-w-[390px] bg-white text-black shadow-xl rounded-sm flex flex-col justify-between border border-slate-200/90 transition-all ${paperAspect} ${fontSizeClass} select-none font-serif`}
+              style={{
+                fontFamily: fontFamily === 'helvetica' ? 'Arial, sans-serif' : '"Times New Roman", Times, serif',
+                paddingTop: `${Math.round((margins.top / 2.5) * 22)}px`,
+                paddingBottom: `${Math.round((margins.bottom / 2.5) * 20)}px`,
+                paddingLeft: `${Math.round((margins.left / 2.5) * 22)}px`,
+                paddingRight: `${Math.round((margins.right / 2.5) * 22)}px`,
+                lineHeight: lineSpacing === '2.0' ? '1.8' : lineSpacing === '1.5' ? '1.45' : lineSpacing === '1.0' ? '1.1' : '1.25',
+              }}
             >
               {/* Header: Logos + Membrete */}
               <div className="relative w-full flex items-start justify-between min-h-[46px] sm:min-h-[56px] gap-1.5">
@@ -702,8 +852,12 @@ export const CoverGeneratorModal: React.FC<CoverGeneratorModalProps> = ({
               </div>
             </div>
 
+            <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-2.5 text-center">
+              {paperType.toUpperCase()} • Margen: {margins.top}cm / {margins.left}cm / {margins.right}cm / {margins.bottom}cm • Interlineado: {lineSpacing}
+            </p>
+
             {/* Quick helper for mobile preview */}
-            <div className="flex items-center gap-2 mt-4 lg:hidden">
+            <div className="flex items-center gap-2 mt-3 lg:hidden">
               <Button
                 type="button"
                 variant="outline"

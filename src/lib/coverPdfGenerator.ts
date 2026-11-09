@@ -2,6 +2,34 @@ import { jsPDF } from 'jspdf';
 
 export type CoverPaperType = 'letter' | 'a4' | 'legal';
 
+export type LineSpacingType = '1.0' | '1.15' | '1.5' | '2.0';
+
+export interface CoverMargins {
+  top: number;    // in cm, e.g. 2.5, 3.0, 4.0
+  bottom: number; // in cm
+  left: number;   // in cm
+  right: number;  // in cm
+}
+
+export const MARGIN_PRESETS: Record<string, { label: string; margins: CoverMargins }> = {
+  apa: {
+    label: 'Normas APA (2.5 cm todos los lados)',
+    margins: { top: 2.5, bottom: 2.5, left: 2.5, right: 2.5 },
+  },
+  tesis: {
+    label: 'Tesis / Encuadernar (Sup: 4cm, Izq: 4cm, Der: 3cm, Inf: 3cm)',
+    margins: { top: 4.0, bottom: 3.0, left: 4.0, right: 3.0 },
+  },
+  standard: {
+    label: 'Estándar Universitario (3.0 cm todos los lados)',
+    margins: { top: 3.0, bottom: 3.0, left: 3.0, right: 3.0 },
+  },
+  compact: {
+    label: 'Compacto (2.0 cm todos los lados)',
+    margins: { top: 2.0, bottom: 2.0, left: 2.0, right: 2.0 },
+  },
+};
+
 export interface StudentAuthor {
   id: string;
   name: string;
@@ -12,6 +40,8 @@ export interface CoverData {
   paperType: CoverPaperType;
   fontFamily: 'times' | 'helvetica';
   fontSize?: '10pt' | '11pt' | '12pt';
+  lineSpacing?: LineSpacingType;
+  margins?: CoverMargins;
   logoLeft?: string | null;  // base64 data URL
   logoRight?: string | null; // base64 data URL
   membrete: string;
@@ -101,13 +131,21 @@ export function createCoverPdfDocument(data: CoverData): jsPDF {
   const baseSize = data.fontSize || '11pt';
   const scale = baseSize === '10pt' ? 0.9 : baseSize === '12pt' ? 1.12 : 1.0;
 
+  // Margins in mm (converted from cm)
+  const marginTop = (data.margins?.top ?? 2.5) * 10;
+  const marginBottom = (data.margins?.bottom ?? 2.5) * 10;
+  const marginLeft = (data.margins?.left ?? 2.5) * 10;
+  const marginRight = (data.margins?.right ?? 2.5) * 10;
+
+  // Interlineado multiplier
+  const spacingMultiplier = data.lineSpacing === '2.0' ? 1.45 : data.lineSpacing === '1.5' ? 1.25 : data.lineSpacing === '1.0' ? 0.9 : 1.0;
+
   const membreteSize = 10.5 * scale;
-  const membreteLineHeight = 4.8 * scale;
   const titleSize = 14 * scale;
-  const titleLineHeight = 6.5 * scale;
+  const titleLineHeight = (6.5 * scale) * spacingMultiplier;
   const subtitleSize = 11 * scale;
   const detailsSize = 10.5 * scale;
-  const detailsLineHeight = 5.5 * scale;
+  const detailsLineHeight = (5.5 * scale) * spacingMultiplier;
   const footerSize = 11 * scale;
 
   const doc = new jsPDF({
@@ -115,10 +153,6 @@ export function createCoverPdfDocument(data: CoverData): jsPDF {
     unit: 'mm',
     format: [W, H],
   });
-
-  const marginX = 25;
-  const marginY = 24;
-  const headerMarginX = 20;
 
   // 1. Logos (Left and Right) with strict original aspect ratio preservation
   const logoBoxSize = 22; // optimal bounding box in mm for academic header logos
@@ -163,22 +197,21 @@ export function createCoverPdfDocument(data: CoverData): jsPDF {
   };
 
   if (data.logoLeft) {
-    addProportionalLogo(data.logoLeft, headerMarginX, marginY);
+    addProportionalLogo(data.logoLeft, marginLeft, marginTop);
   }
 
   if (data.logoRight) {
-    addProportionalLogo(data.logoRight, W - headerMarginX - logoBoxSize, marginY);
+    addProportionalLogo(data.logoRight, W - marginRight - logoBoxSize, marginTop);
   }
 
   // 2. Centered Membrete
   doc.setFont(font, 'bold');
 
-  // Calculate available text width between logos (or page margins if no logos)
+  // Calculate available text width between logos (or margins if no logos)
   const hasLogos = !!(data.logoLeft || data.logoRight);
-  // Ensure comfortable horizontal span so official institutional lines do not awkwardly wrap
   const maxMembreteWidth = hasLogos
-    ? W - (headerMarginX * 2 + logoBoxSize * 2 + 8) // ~126mm on Letter, ~120mm on A4
-    : W - marginX * 2; // ~166mm when no logos
+    ? (W - marginRight - (data.logoRight ? logoBoxSize + 4 : 0)) - (marginLeft + (data.logoLeft ? logoBoxSize + 4 : 0))
+    : W - (marginLeft + marginRight);
 
   const rawMembreteLines = data.membrete.split('\n').map(l => l.trim()).filter(Boolean);
 
@@ -199,19 +232,21 @@ export function createCoverPdfDocument(data: CoverData): jsPDF {
   doc.setFontSize(effectiveMembreteSize);
   doc.setTextColor(20, 20, 20);
 
-  const currentMembreteLineHeight = effectiveMembreteSize * 0.44;
-  let currentY = marginY + 2;
+  const currentMembreteLineHeight = (effectiveMembreteSize * 0.44) * spacingMultiplier;
+  let currentY = marginTop + 2;
+
+  // Document optical center X
+  const centerX = (marginLeft + (W - marginRight)) / 2;
 
   rawMembreteLines.forEach(line => {
     const wrapped = doc.splitTextToSize(line, maxMembreteWidth);
     wrapped.forEach((wrappedLine: string) => {
-      doc.text(wrappedLine, W / 2, currentY, { align: 'center' });
+      doc.text(wrappedLine, centerX, currentY, { align: 'center' });
       currentY += currentMembreteLineHeight;
     });
   });
 
   // 3. Activity Title (Vertically Centered)
-  // Position vertically: balanced around middle
   let titleY = H / 2 - 12;
   if (data.paperType === 'legal') {
     titleY = H / 2 - 20;
@@ -219,12 +254,12 @@ export function createCoverPdfDocument(data: CoverData): jsPDF {
 
   doc.setFont(font, 'bold');
   doc.setFontSize(titleSize);
-  const maxTitleWidth = W - marginX * 2 - 10;
+  const maxTitleWidth = (W - marginRight) - marginLeft - 10;
   const rawTitle = data.title.trim() || 'TÍTULO DE LA ACTIVIDAD';
   const titleLines = doc.splitTextToSize(rawTitle.toUpperCase(), maxTitleWidth);
 
   titleLines.forEach((tLine: string) => {
-    doc.text(tLine, W / 2, titleY, { align: 'center' });
+    doc.text(tLine, centerX, titleY, { align: 'center' });
     titleY += titleLineHeight;
   });
 
@@ -235,35 +270,35 @@ export function createCoverPdfDocument(data: CoverData): jsPDF {
     doc.setFontSize(subtitleSize);
     const subLines = doc.splitTextToSize(data.subtitle.trim(), maxTitleWidth);
     subLines.forEach((sLine: string) => {
-      doc.text(sLine, W / 2, titleY, { align: 'center' });
-      titleY += 5.2 * scale;
+      doc.text(sLine, centerX, titleY, { align: 'center' });
+      titleY += 5.2 * scale * spacingMultiplier;
     });
   }
 
   // 4. Lower Section: Docente (Left) & Realizado por / Autores (Right)
-  let lowerY = H - 76;
+  let lowerY = H - marginBottom - 42;
   if (data.paperType === 'legal') {
-    lowerY = H - 96;
+    lowerY = H - marginBottom - 58;
   } else if (data.paperType === 'a4') {
-    lowerY = H - 82;
+    lowerY = H - marginBottom - 46;
   }
 
   // Left Column: Docente
   const docRole = data.docenteRole.trim() || 'DOCENTE:';
   doc.setFont(font, 'bold');
   doc.setFontSize(detailsSize);
-  doc.text(docRole, marginX, lowerY);
+  doc.text(docRole, marginLeft, lowerY);
 
   const prefix = data.docenteTitle && data.docenteTitle !== 'Sin título' ? `${data.docenteTitle} ` : '';
   const docenteFullName = `${prefix}${data.docenteName.trim() || 'Nombre del Docente'}`;
 
   doc.setFont(font, 'normal');
   doc.setFontSize(detailsSize);
-  doc.text(docenteFullName, marginX, lowerY + detailsLineHeight);
+  doc.text(docenteFullName, marginLeft, lowerY + detailsLineHeight);
 
   // Right Column: Autores / Realizado por
   const authRole = data.authorRole.trim() || 'REALIZADO POR:';
-  const rightAlignX = W - marginX;
+  const rightAlignX = W - marginRight;
 
   doc.setFont(font, 'bold');
   doc.setFontSize(detailsSize);
@@ -280,14 +315,14 @@ export function createCoverPdfDocument(data: CoverData): jsPDF {
   });
 
   // 5. Bottom Footer: Ciudad y Fecha
-  const footerY = H - 24;
+  const footerY = H - marginBottom - 3;
   doc.setFont(font, 'bold');
   doc.setFontSize(footerSize);
 
   const cityPrefix = data.city && data.city.trim() ? `${data.city.trim()}, ` : '';
   const dateText = `${cityPrefix}${data.month} de ${data.year}`;
 
-  doc.text(dateText, W / 2, footerY, { align: 'center' });
+  doc.text(dateText, centerX, footerY, { align: 'center' });
 
   return doc;
 }
@@ -324,14 +359,26 @@ export function generateCoverLatexCode(data: CoverData): string {
     .join(' \\\\[0.2cm]\n');
 
   const sizeOpt = data.fontSize || '11pt';
+  const topCm = data.margins?.top ?? 2.5;
+  const bottomCm = data.margins?.bottom ?? 2.5;
+  const leftCm = data.margins?.left ?? 2.5;
+  const rightCm = data.margins?.right ?? 2.5;
+
+  const spacingCmd = data.lineSpacing === '2.0'
+    ? '\\usepackage{setspace}\n\\doublespacing\n'
+    : data.lineSpacing === '1.5'
+    ? '\\usepackage{setspace}\n\\onehalfspacing\n'
+    : data.lineSpacing === '1.0'
+    ? '\\usepackage{setspace}\n\\singlespacing\n'
+    : '';
 
   return `\\documentclass[${sizeOpt}, ${paperOpt}]{article}
 \\usepackage[spanish, es-tabla]{babel}
 \\usepackage[utf8]{inputenc}
-\\usepackage[margin=2.5cm]{geometry}
+\\usepackage[top=${topCm}cm, bottom=${bottomCm}cm, left=${leftCm}cm, right=${rightCm}cm]{geometry}
 \\usepackage{mathptmx}
 \\usepackage{graphicx}
-
+${spacingCmd}
 \\begin{document}
 \\pagestyle{empty}
 
