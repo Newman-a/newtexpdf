@@ -22,58 +22,54 @@ interface LandingPageProps {
 export const UNIVERSITY_LATEX_PROMPT = `Actúa como un docente universitario experto en LaTeX y en redacción académica.
 Necesito que resuelvas y estructures la siguiente actividad universitaria en código LaTeX completo, impecable y listo para compilar.
 
-Sigue estrictamente estos lineamientos y criterios técnicos:
+Sigue estrictamente estos lineamientos y criterios técnicos obligatorios:
 
-1. ESTRUCTURA Y FORMATO GENERAL:
-- Utiliza la clase de documento: \\documentclass[12pt, letterpaper]{article} (o a4paper/legalpaper según aplique).
-- Tipografía: Times New Roman mediante \\usepackage{mathptmx} (o Arial con \\usepackage{helvet}\\renewcommand{\\familydefault}{\\sfdefault}).
-- Idioma y codificación: \\usepackage[spanish, es-tabla]{babel} y \\usepackage[utf8]{inputenc}.
-- Márgenes académicos equilibrados: \\usepackage[margin=2.5cm]{geometry}.
-- Interlineado: \\usepackage{setspace}\\onehalfspacing o espaciado de 1.15.
+1. ESTRUCTURA, TIPOGRAFÍA Y TAMAÑO UNIFORME DE 12 PT:
+- Clase de documento: \\documentclass[12pt, letterpaper]{article}
+- Márgenes: \\usepackage[margin=2.5cm]{geometry} (esto deja un ancho útil de texto exacto de 16.59 cm).
+- Idioma y paquetes base: \\usepackage[utf8]{inputenc}, \\usepackage[spanish, es-tabla]{babel}, \\usepackage{mathptmx} (Times New Roman), \\usepackage{setspace}\\onehalfspacing.
+- TAMAÑO DE LETRA 12 PT UNIFORME: Todo el texto del documento y TODOS los títulos (\\section, \\subsection, \\subsubsection y \\paragraph) deben tener exactamente tamaño de 12 puntos (\\normalsize) en negrita. Incluye obligatoriamente este bloque en el preámbulo para evitar títulos gigantes:
+  \\makeatletter
+  \\renewcommand\\section{\\@startsection{section}{1}{\\z@}{-3.5ex \\@plus -1ex \\@minus -.2ex}{2.3ex \\@plus.2ex}{\\normalfont\\normalsize\\bfseries}}
+  \\renewcommand\\subsection{\\@startsection{subsection}{2}{\\z@}{-3.25ex\\@plus -1ex \\@minus -.2ex}{1.5ex \\@plus .2ex}{\\normalfont\\normalsize\\bfseries}}
+  \\renewcommand\\subsubsection{\\@startsection{subsubsection}{3}{\\z@}{-3.25ex\\@plus -1ex \\@minus -.2ex}{1.5ex \\@plus .2ex}{\\normalfont\\normalsize\\bfseries}}
+  \\renewcommand\\paragraph{\\@startsection{paragraph}{4}{\\z@}{3.25ex \\@plus1ex \\@minus.2ex}{-1em}{\\normalfont\\normalsize\\bfseries}}
+  \\makeatother
 
-2. SIN PORTADA (MUY IMPORTANTE):
-- NO incluyas portada formal (omite \\begin{titlepage} o página en blanco).
-- Inicia directamente en la primera página con un encabezado institucional sobrio o bloque de datos:
-  Universidad, Carrera, Asignatura, Título de la Actividad, Nombre del Estudiante y Fecha.
-- La portada se diseñará aparte y se unirá posteriormente en PDF.
+2. SIN PORTADA Y SIN MEMBRETE (INICIO DIRECTO):
+- NO incluyas portada (\\begin{titlepage}) NI TAMPOCO incluyas membrete o encabezado institucional (no pongas nombre de universidad, vicerrectorado, asignatura ni datos del estudiante al inicio).
+- Inicia el documento después de \\begin{document} directamente con la primera sección de contenido (por ejemplo: \\section*{Introducción} o el primer punto de la actividad), ya que la portada se unirá aparte en PDF.
 
-3. REGLA DE ORO PARA TABLAS (EVITAR QUE SE CORTEN):
-- Ninguna tabla debe desbordar el margen derecho de la página.
-- Envuelve SIEMPRE cada tabla ancha con \\resizebox{\\linewidth}{!}{...} del paquete graphicx, o utiliza columnas con ancho fijo como p{3.5cm} y tabularx:
-  \\begin{center}
-  \\resizebox{\\linewidth}{!}{
-    \\begin{tabular}{|c|c|p{6cm}|}
-    \\hline
-    ...
-    \\hline
-    \\end{tabular}
-  }
-  \\end{center}
+3. REGLA DE ORO PARA CUADROS, TABLAS, ESQUEMAS Y MAPAS CONCEPTUALES (PROHIBIDO CORTARSE A LA DERECHA O ABAJO):
+- PROHIBIDO usar \\resizebox o \\begin{tabular} en cuadros medianos o largos, porque no permiten saltos de página y cortan la tabla por abajo pisando la numeración.
+- Usa SIEMPRE el paquete \\usepackage{longtable} y \\usepackage{array} para TODOS los cuadros, matrices, cuadros resumen y diagramas esquemáticos, permitiendo que se dividan limpiamente entre páginas con \\endfirsthead y \\endhead.
+- Define en el preámbulo este tipo de columna con letra reducida (\\footnotesize), interlineado simple y alineación izquierda para que el texto se adapte perfecto sin dejar huecos en blanco:
+  \\renewcommand{\\arraystretch}{1.15}
+  \\setlength{\\tabcolsep}{3.5pt}
+  \\setlength{\\LTleft}{0pt}
+  \\setlength{\\LTright}{0pt}
+  \\newcolumntype{P}[1]{>{\\raggedright\\arraybackslash\\singlespacing\\footnotesize}p{#1}}
+- CONTROL MATEMÁTICO DEL ANCHO DERECHO: La suma de los anchos de todas las columnas P{...} de cualquier tabla NUNCA debe superar los 15.0 cm en total (por ejemplo: 4 columnas de |P{2.5cm}|P{3.3cm}|P{4.6cm}|P{4.6cm}| = 15.0 cm; o 5 columnas de |P{2.2cm}|P{3.1cm}|P{3.4cm}|P{3.1cm}|P{3.1cm}| = 14.9 cm).
+- PROHIBIDO usar \\multicolumn{N}{|c|}{Texto largo} suelto en títulos de tablas, porque desborda la tabla hacia la derecha. Envuelve SIEMPRE el texto de cualquier \\multicolumn dentro de un \\parbox de máximo 14.8 cm:
+  \\multicolumn{4}{|c|}{\\parbox{14.8cm}{\\centering\\vspace{3pt}\\textbf{TÍTULO DEL CUADRO}\\vspace{3pt}}} \\\\ \\hline
 
-4. DESARROLLO DEL CONTENIDO (ADAPTACIÓN INTELIGENTE):
-- Si la actividad involucra ejercicios numéricos, cálculo, ciencias o matemáticas:
-  * Resuelve cada ejercicio paso a paso con rigor analítico.
-  * Emplea \\usepackage{amsmath, amssymb, amsfonts}.
-  * Presenta ecuaciones destacadas en bloques display ($$ ... $$) o en el entorno align*.
-  * Incluye explicaciones conceptuales breves antes y después de cada cálculo.
-- Si la actividad es teórica, ensayo, resumen, reporte o humanística:
-  * Estructura el documento con secciones y subsecciones jerárquicas bien argumentadas.
-  * Redacta párrafos fluidos y académicos con citas bibliográficas apropiadas.
-  * OMITE por completo fórmulas, símbolos matemáticos y paquetes numéricos innecesarios.
+4. DESARROLLO DEL CONTENIDO Y DIAGRAMAS:
+- Desarrolla toda la teoría y el análisis con profundidad universitaria, paráfrasis rigurosa y citas en formato APA (Autor, año).
+- Si piden un "Diagrama Esquemático", "Cuadro Resumen" o "Mapa de Conceptos", constrúyelo usando la estructura de \\begin{longtable} con columnas P{...}, flechas lógicas ($\\downarrow$, $\\rightarrow$) y conectores en cursiva para que tenga apariencia de esquema/mapa jerárquico pero con ajuste automático de página garantizado.
+- Si además del cuadro o esquema piden desarrollar, caracterizar o ejemplificar los puntos, redacta subsecciones amplias y detalladas debajo de cada cuadro explicando cada punto de forma exhaustiva.
+- Si la actividad involucra ejercicios matemáticos o de cálculo, usa \\usepackage{amsmath, amssymb, amsfonts} y resuelve paso a paso. Si es teórica, omite fórmulas innecesarias.
 
-5. PAQUETES ESTÁNDAR Y LIMPIEZA:
-- Emplea únicamente paquetes universales compatibles con Tectonic/XeTeX:
-  amsmath, amssymb, graphicx, booktabs, array, geometry, mathptmx, hyperref, url.
-- Evita paquetes obsoletos o comandos conflictivos.
+5. DECLARACIÓN DE USO ÉTICO DE IA (SI LA ACTIVIDAD O INSTRUCTIVO LO EXIGE):
+- Si las instrucciones de la universidad solicitan declarar el uso de IA, incluye antes de la bibliografía una sección titulada \\section*{Declaración sobre el Uso Ético de Herramientas Tecnológicas e Inteligencia Artificial} con la referencia en formato APA y un párrafo explicando que se utilizó como asistente de maquetación tipográfica y estructuración, siendo revisada y contrastada con la bibliografía académica.
 
-6. BIBLIOGRAFÍA Y REFERENCIAS (FORMATO APA LIMPIO Y COMPATIBLE CON WORD):
-- Elimina cualquier comando o entorno bibliográfico complejo (NO uses \\apaitem ni \\begin{apabib}). Escribe las referencias como texto plano estructurado dentro de un entorno estándar (p. ej., párrafos normales con sangría francesa usando \\hangindent=0.5in \\hangafter=1 o simplemente saltos de párrafo \\par).
-- Prohíbe terminantemente el uso de signos de dólar ($) en los enlaces o en el texto. Elimina fragmentos truncados como "$=10393$" o "$=4169414$". Si una fuente no tiene URL limpia, omite el enlace y deja la referencia bibliográfica editorial completa.
-- Escribe todas las URLs dentro del comando \\url{...} (requiere \\usepackage{url} o \\usepackage{hyperref}) con la opción de permitir saltos de línea automáticos, o coloca el hipervínculo en texto limpio sin caracteres escapados que rompan la justificación en Word.
-- Evita espacios en blanco desproporcionados entre palabras forzando alineación a la izquierda (\\raggedright) en el bloque de bibliografía para que Word no estire el texto al justificar líneas con enlaces largos.
+6. BIBLIOGRAFÍA Y REFERENCIAS (FORMATO APA 7ma EDICIÓN LIMPIO):
+- No uses comandos bibliográficos complejos (\\apaitem o BibTeX).
+- Coloca \\raggedright al inicio de la sección \\section*{Referencias Bibliográficas} y redacta cada fuente usando sangría francesa con:
+  \\hangindent=0.5in \\hangafter=1
+- Prohíbe el uso de signos de dólar ($) o enlaces rotos; escribe las URLs limpias únicamente dentro de \\url{...}.
 
-A continuación, aquí tienes los enunciados y datos de la actividad para resolver:
-[PEGA AQUÍ EL ENUNCIADO O EJERCICIOS DE TU ACTIVIDAD]`;
+A continuación, aquí tienes las instrucciones y contenidos de la actividad para resolver:
+[PEGA AQUÍ EL ENUNCIADO O INSTRUCTIVO DE TU ACTIVIDAD]`;
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onGoToEditor,
